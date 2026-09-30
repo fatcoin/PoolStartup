@@ -172,6 +172,24 @@
   .menu-pop .who { padding: 8px 10px; font-size: 12px; color: var(--text-faint); border-bottom: 1px solid var(--border); margin-bottom: 4px; }
   .menu-pop button { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--text); padding: 8px 10px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
   .menu-pop button:hover { background: var(--surface); }
+  input[type=date] { width: 100%; padding: 7px 10px; background: var(--surface-pressed); color: var(--text); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); box-shadow: var(--neu-in-sm); font: 13px/1.35 inherit; font-family: inherit; color-scheme: dark; }
+  input:disabled, select:disabled, textarea:disabled { opacity: .7; cursor: default; }
+  .seg { display: inline-flex; background: var(--surface-pressed); border: 1px solid var(--border); border-radius: 9px; padding: 3px; gap: 2px; }
+  .seg button { background: none; border: 0; color: var(--text-muted); padding: 6px 12px; border-radius: 6px; cursor: pointer; font: 500 12.5px inherit; font-family: inherit; }
+  .seg button.on { background: var(--surface-raised); color: var(--text); box-shadow: var(--neu-out-sm); }
+  .seg button:disabled { opacity: .4; cursor: default; }
+  .chip.st-draft { background: transparent; color: var(--text-muted); border-color: var(--border); }
+  .chip.st-sent { background: rgba(0,180,216,.14); color: var(--accent-bright); border-color: transparent; }
+  .chip.st-accepted { background: rgba(6,214,160,.14); color: var(--success); border-color: transparent; }
+  .chip.st-declined { background: rgba(239,71,111,.14); color: #ff8fa8; border-color: transparent; }
+  .chip.st-superseded { background: transparent; color: var(--text-faint); border-color: var(--border); text-decoration: line-through; }
+  .notice { background: rgba(0,180,216,.08); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; margin-bottom: 16px; color: var(--text-muted); }
+  .qgrid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 16px; margin-bottom: 16px; }
+  .qgrid .panel + .panel { margin-top: 0; }
+  .kv { display: grid; gap: 3px; margin: 8px 0 12px; font-size: 13px; }
+  .kv > div:first-child { font-weight: 600; font-size: 14px; }
+  .kv2 { display: grid; grid-template-columns: 110px 1fr; gap: 5px 10px; font-size: 13px; }
   .loading { padding: 60px; text-align: center; color: var(--text-muted); }
 
   @media (max-width: 820px) {
@@ -182,7 +200,7 @@
     .subnav a { white-space: nowrap; }
     .brand small { display: none; }
     .wrap { padding: 16px 14px 60px; }
-    .g2, .g3 { grid-template-columns: 1fr; }
+    .g2, .g3, .qgrid { grid-template-columns: 1fr; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -308,7 +326,14 @@ async function loadAll() {
     q(sb.from('su_cadence_steps').select('*').order('offset_days').order('sort'), 'Loading follow-ups'),
     q(sb.from('su_settings').select('*'), 'Loading settings'),
   ]);
-  Object.assign(S, { items, builders, builderPrices: bps, templates: tpls, templateLines: tlines, cadence, loaded: true });
+  const [customers, jobs, quotes] = await Promise.all([
+    q(sb.from('su_customers').select('*'), 'Loading customers'),
+    q(sb.from('su_jobs').select('*'), 'Loading jobs'),
+    q(sb.from('su_quotes').select('*').order('updated_at', { ascending: false }), 'Loading quotes'),
+  ]);
+  const chk = await sb.from('su_quotes').select('id, options').limit(1);
+  S.needsMigration = !!chk.error;
+  Object.assign(S, { items, builders, builderPrices: bps, templates: tpls, templateLines: tlines, cadence, customers, jobs, quotes, loaded: true });
   S.settings = Object.fromEntries(settings.map(r => [r.key, r.value]));
 }
 
@@ -316,7 +341,7 @@ async function loadAll() {
 function route() {
   const hsh = location.hash.startsWith('#/') ? location.hash.slice(2) : '';
   const parts = hsh.split('/').filter(Boolean);
-  return { tab: parts[0] || 'settings', sub: parts[1] || 'items', id: parts[2] || null };
+  return { tab: parts[0] || 'settings', sub: parts[1] || 'items', id: parts[2] || null, parts };
 }
 function go(path) {
   if (S.dirty && !confirm('You have unsaved changes. Leave without saving?')) return;
@@ -407,7 +432,7 @@ function render() {
       <nav class="tabs">${tabs.map(([k, t]) => `<button class="tab${r.tab === k ? ' active' : ''}" data-tab="${k}">${t}</button>`).join('')}</nav>
       <div class="top-right menu"><button class="btn btn-sm btn-ghost" id="me-btn" aria-haspopup="true">${h(S.user.email.split('@')[0])} ▾</button>
         <div class="menu-pop" id="me-menu" hidden><div class="who">${h(S.user.email)}</div>
-          <button id="me-pw">Change password</button><button id="me-out">Sign out</button></div></div>
+          <button id="me-details">My details</button><button id="me-pw">Change password</button><button id="me-out">Sign out</button></div></div>
     </header>
     <div class="wrap" id="view"></div>`;
   $$('[data-tab]').forEach(b => b.onclick = () => go(b.dataset.tab === 'settings' ? 'settings/items' : b.dataset.tab));
@@ -415,6 +440,7 @@ function render() {
   $('#me-btn').onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; };
   document.onclick = () => { menu.hidden = true; };
   $('#me-out').onclick = async () => { if (S.dirty && !confirm('Discard unsaved changes and sign out?')) return; S.dirty = false; await sb.auth.signOut(); };
+  $('#me-details').onclick = () => myDetailsDialog();
   $('#me-pw').onclick = () => openDialog({
     title: 'Change password',
     body: `<div class="field"><label class="lbl">New password</label><input id="np" type="password" minlength="8" autocomplete="new-password"></div>
@@ -432,15 +458,15 @@ function render() {
 
   const view = $('#view');
   if (r.tab === 'settings') return renderSettings(view, r);
+  if (r.tab === 'quotes') return renderQuotes(view, r);
   const later = {
     today: ['Today', 'Follow-ups due, quotes waiting on a disclosure acknowledgment, and start-ups finishing this week will show here.'],
     jobs: ['Jobs', 'Every start-up by stage, with its timeline and weekly-service outcome, will live here.'],
-    quotes: ['Quotes', 'The quote builder and PDF download come next. Set up your line items, builder pricing, and templates first so new quotes fill in automatically.'],
   }[r.tab] || ['Not found', ''];
   view.innerHTML = `<div class="view-head"><h2>${later[0]}</h2></div>
     <div class="panel empty"><strong>Coming in the next update</strong><p>${later[1]}</p>
-    <button class="btn btn-primary" id="to-settings">Set up pricing and templates</button></div>`;
-  $('#to-settings').onclick = () => go('settings/templates');
+    <button class="btn btn-primary" id="to-quotes">Go to quotes</button></div>`;
+  $('#to-quotes').onclick = () => go('quotes');
 }
 
 // =====================================================================
@@ -836,6 +862,12 @@ function viewGeneral(sv) {
         <div class="field"><label class="lbl" for="g-tax">Sales tax rate (%)</label><input id="g-tax" type="text" inputmode="decimal" value="${(Number(st.tax_rate ?? 0.0825) * 100).toFixed(3).replace(/\.?0+$/, '')}"></div>
         <div class="field"><label class="lbl" for="g-exp">Quotes valid for (days)</label><input id="g-exp" type="number" min="1" step="1" value="${Number(st.quote_expiry_days ?? 30)}"></div>
       </div></div>
+    <div class="panel panel-pad"><h3>PDF defaults</h3><p class="desc">What new quotes include. Each quote can turn these on or off.</p>
+      <div style="display:grid;gap:8px">
+        <label class="check"><input type="checkbox" id="gd-disc"${quoteDefaults().show_disclosure ? ' checked' : ''}> Plaster start-up disclosure</label>
+        <label class="check"><input type="checkbox" id="gd-ack"${quoteDefaults().show_ack ? ' checked' : ''}> Acknowledge by text or email instructions</label>
+        <label class="check"><input type="checkbox" id="gd-sig"${quoteDefaults().show_signature ? ' checked' : ''}> Signature, date, and printed name block</label>
+      </div></div>
     <div class="panel panel-pad"><h3>Company details</h3><p class="desc">Printed on the quote header and footer.</p>
       <div class="g2">
         <div class="field"><label class="lbl" for="g-cname">Company name</label><input id="g-cname" type="text" value="${h(co.name)}"></div>
@@ -851,13 +883,13 @@ function viewGeneral(sv) {
     <div class="panel panel-pad"><h3>Plaster start-up disclosure</h3><p class="desc">Prints on every quote. Keep the acknowledgment statement word-for-word the same as the one inside the disclosure.</p>
       <div class="field"><label class="lbl" for="g-ack">Acknowledgment statement the customer replies with</label><input id="g-ack" type="text" value="${h(st.ack_statement)}"></div>
       <div class="field"><label class="lbl" for="g-disc">Disclosure text</label><textarea id="g-disc" rows="18" style="font-size:12.5px;line-height:1.5">${h(st.disclosure_text)}</textarea>
-        <div class="hint">Lines in ALL CAPS print as headings. Lines starting with “- ” print as bullets.</div></div></div>
+        <div class="hint">Lines in ALL CAPS print as headings. Lines starting with “- ” print as bullets. A section headed “Customer acknowledgment” is left off the PDF, because each quote’s acknowledgment options (text/email box or signature block) print in its place.</div></div></div>
     <div class="panel panel-pad"><h3>Pre-start inspection checklist</h3><p class="desc">What the repair tech checks before start-up. One question per line.</p>
       <textarea id="g-check" rows="7">${h(checklist)}</textarea></div>
     <div class="panel panel-pad"><h3>Timeline</h3><p class="desc">Which day after the start date each phase begins. Used to estimate the final visit date and schedule follow-ups.</p>
       <div class="g3">${JOIN_PHASES.map(([k, t]) => `<div class="field"><label class="lbl" for="po-${k}">${t} (day)</label><input id="po-${k}" type="number" min="0" step="1" data-po="${k}" value="${Number(po[k] ?? 0)}"></div>`).join('')}</div></div>
     <div class="savebar"><span class="dirty" id="dirty-flag"${S.dirty ? '' : ' hidden'}>Unsaved changes</span><button class="btn btn-primary" id="g-save">Save changes</button></div>`;
-  $$('input, textarea', sv).forEach(el => el.addEventListener('input', markDirty));
+  $$('input, textarea', sv).forEach(el => { el.addEventListener('input', markDirty); el.addEventListener('change', markDirty); });
   $('#g-save').onclick = async () => {
     const tax = numOrNull($('#g-tax').value);
     if (tax == null || Number.isNaN(tax) || tax < 0 || tax > 20) return toast('Enter a tax rate between 0 and 20%.', true);
@@ -873,12 +905,633 @@ function viewGeneral(sv) {
       disclosure_text: $('#g-disc').value.replace(/\s+$/, ''),
       inspection_checklist: $('#g-check').value.split('\n').map(s => s.trim()).filter(Boolean),
       phase_offsets: offsets,
+      quote_defaults: { show_disclosure: $('#gd-disc').checked, show_ack: $('#gd-ack').checked, show_signature: $('#gd-sig').checked },
     };
     try {
       await q(sb.from('su_settings').upsert(Object.entries(vals).map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }))), 'Saving settings');
       Object.assign(S.settings, vals); S.dirty = false; toast('Settings saved'); render();
     } catch (_) {}
   };
+}
+
+// =====================================================================
+// QUOTES (phase 2)
+// =====================================================================
+const Q_STATUS = [['draft','Draft'],['sent','Sent'],['accepted','Accepted'],['declined','Declined'],['superseded','Replaced']];
+const STAGES = ['request','inspection','quote_sent','accepted','disclosure_ack','in_startup','final_complete'];
+const statusChip = s => `<span class="chip st-${s}">${h(label(Q_STATUS, s))}</span>`;
+const custName = c => c ? ([c.first_name, c.last_name].filter(Boolean).join(' ') || c.email || 'Unnamed customer') : '—';
+const custAddr = c => c ? [c.address, [c.city, [c.state, c.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(', ') : '';
+const todayISO = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
+const addDays = (iso, n) => { const d = new Date(iso + 'T12:00:00'); d.setDate(d.getDate() + n); return d.toISOString().slice(0, 10); };
+const fmtDate = d => d ? new Date(String(d).length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : '';
+const fmtShort = d => d ? new Date(String(d).length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+const newRef = () => { const d = new Date(), p = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}${Math.floor(Math.random() * 90 + 10)}`; };
+const repInfo = () => { const md = S.user?.user_metadata || {}; return { rep_name: md.full_name || S.user.email, rep_email: S.user.email, rep_phone: md.phone || '' }; };
+const quoteDefaults = () => ({ show_disclosure: true, show_ack: true, show_signature: false, ...(S.settings.quote_defaults || {}) });
+const fmtQty = n => Number.isInteger(Number(n)) ? String(Number(n)) : String(Number(n));
+const jobOf = qt => byId(S.jobs, qt.job_id);
+const custOf = job => job ? byId(S.customers, job.customer_id) : null;
+
+async function logActivity(job_id, kind, message, meta = {}) {
+  try { await sb.from('su_activity').insert({ job_id, kind, message, meta, created_by: S.user.id }); } catch (_) {}
+}
+async function advanceJob(job, stage, extra = {}) {
+  if (!job || job.stage === 'cancelled') return;
+  const patch = { ...extra };
+  if (STAGES.indexOf(job.stage) < STAGES.indexOf(stage)) patch.stage = stage;
+  if (!Object.keys(patch).length) return;
+  try { Object.assign(job, await q(sb.from('su_jobs').update(patch).eq('id', job.id).select().single(), 'Updating job')); } catch (_) {}
+}
+
+function lineFromItem(it, builderId, over = {}) {
+  const list = it.is_note ? 0 : resolvedPrice(it.id, builderId);
+  const bp = builderPrice(builderId, it.id);
+  return { item_id: it.id, name: over.name || it.name, description: over.description || bp?.description_override || it.description || '',
+    qty: over.qty != null ? Number(over.qty) : 1, unit_price: it.is_note ? 0 : (over.unit_price == null ? list : Number(over.unit_price)),
+    list_price: list, taxable: !!it.taxable && !it.is_note, team: it.team, phase: it.phase, is_note: !!it.is_note };
+}
+function linesFromTemplate(tplId, builderId) {
+  return S.templateLines.filter(l => l.template_id === tplId).sort((a, b) => a.sort - b.sort)
+    .map(l => { const it = byId(S.items, l.item_id); return it ? lineFromItem(it, builderId, l) : null; }).filter(Boolean);
+}
+function quoteTotals(lines, rate) {
+  let sub = 0, base = 0;
+  lines.forEach(l => { if (l.is_note) return; const t = round2(Number(l.qty) * Number(l.unit_price)); sub += t; if (l.taxable) base += t; });
+  const tax = round2(base * Number(rate));
+  return { sub: round2(sub), tax, total: round2(sub + tax) };
+}
+const templatesFor = builderId => S.templates.filter(t => t.active && (!t.builder_id || t.builder_id === builderId))
+  .sort((a, b) => (!!b.builder_id - !!a.builder_id) || (a.sort - b.sort));
+
+// ---------- list ----------
+function renderQuotes(view, r) {
+  if (S.needsMigration) {
+    view.innerHTML = `<div class="view-head"><h2>Quotes</h2></div><div class="panel empty"><strong>One database update needed</strong>
+      <p>Open Supabase → SQL Editor → New query, paste <b>supabase/migration_002_quotes.sql</b> from the repo, and click Run. Then reload this page.</p>
+      <button class="btn" onclick="location.reload()">Reload</button></div>`;
+    return;
+  }
+  if (r.parts[1]) return viewQuoteEdit(view, r.parts[1]);
+  const f = S.qFilter || 'open', term = (S.qSearch || '').toLowerCase();
+  const filters = [['open','Open'],['accepted','Accepted'],['declined','Declined'],['all','All']];
+  const rows = S.quotes.filter(qt => {
+    if (f === 'open' && !['draft','sent'].includes(qt.status)) return false;
+    if (f === 'accepted' && qt.status !== 'accepted') return false;
+    if (f === 'declined' && !['declined','superseded'].includes(qt.status)) return false;
+    if (!term) return true;
+    const job = jobOf(qt), c = custOf(job), b = job && byId(S.builders, job.builder_id);
+    return [qt.title, qt.ref, custName(c), custAddr(c), c?.email, c?.phone, b?.name].join(' ').toLowerCase().includes(term);
+  }).sort((a, b) => String(b.updated_at).localeCompare(String(a.updated_at)));
+  view.innerHTML = `<div class="view-head"><h2>Quotes</h2><div class="grow"></div><button class="btn btn-primary" id="new-q">New quote</button></div>
+    <div class="row" style="margin-bottom:12px">
+      <div class="seg">${filters.map(([k, t]) => `<button data-f="${k}" class="${f === k ? 'on' : ''}">${t}</button>`).join('')}</div>
+      <input type="text" id="q-search" placeholder="Search name, address, builder, or quote #" value="${h(S.qSearch || '')}" style="max-width:340px"></div>
+    <div class="panel tbl-wrap">${rows.length ? `<table class="tbl"><thead><tr><th>Quote</th><th>Customer</th><th>Builder</th><th>Status</th><th class="right">Total</th><th class="right">Updated</th></tr></thead><tbody>
+      ${rows.map(qt => { const job = jobOf(qt), c = custOf(job), b = job && byId(S.builders, job.builder_id);
+        return `<tr class="click" data-id="${qt.id}"><td><div class="name">${h(qt.title)}</div><div class="clip">#${h(qt.ref)}${qt.version > 1 ? `, version ${qt.version}` : ''}</div></td>
+          <td>${h(custName(c))}<div class="clip">${h(custAddr(c))}</div></td><td>${b ? h(b.name) : '<span class="faint">—</span>'}</td>
+          <td>${statusChip(qt.status)}</td><td class="right num">${money(qt.total)}</td><td class="right faint">${fmtShort(qt.updated_at)}</td></tr>`; }).join('')}
+      </tbody></table>` : `<div class="empty"><strong>${S.quotes.length ? 'No quotes match' : 'No quotes yet'}</strong>
+        <p>${S.quotes.length ? 'Try a different filter or search.' : 'Start a quote from a template. The customer and job are created with it.'}</p></div>`}</div>`;
+  $('#new-q').onclick = () => newQuoteDialog();
+  $$('[data-f]', view).forEach(b => b.onclick = () => { S.qFilter = b.dataset.f; renderQuotes(view, r); });
+  const si = $('#q-search'); si.oninput = () => { S.qSearch = si.value; clearTimeout(si._t); si._t = setTimeout(() => { renderQuotes(view, r); const n = $('#q-search'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 200); };
+  $$('tr[data-id]', view).forEach(tr => tr.onclick = () => go('quotes/' + tr.dataset.id));
+}
+
+// ---------- new quote ----------
+function newQuoteDialog(preset = {}) {
+  const md = S.user.user_metadata || {};
+  if (!md.full_name) toast('Tip: add your name and phone under your account menu → My details so they print on quotes.');
+  const builders = S.builders.filter(b => b.active);
+  const custs = [...S.customers].sort((a, b) => custName(a).localeCompare(custName(b)));
+  openDialog({
+    title: 'New quote',
+    body: `<div class="seg" style="margin-bottom:14px"><button data-mode="new" class="on">New customer</button><button data-mode="existing"${custs.length ? '' : ' disabled'}>Existing customer</button></div>
+      <div id="nq-existing" hidden>
+        <div class="field"><label class="lbl" for="nq-cust">Customer</label><select id="nq-cust"><option value="">Choose a customer…</option>${custs.map(c => `<option value="${c.id}">${h(custName(c))}${c.address ? ` — ${h(c.address)}` : ''}</option>`).join('')}</select></div>
+        <div class="field" id="nq-job-wrap" hidden><label class="lbl" for="nq-job">Start-up</label><select id="nq-job"></select></div>
+      </div>
+      <div id="nq-new">
+        <div class="g2">
+          <div class="field"><label class="lbl" for="nq-first">First name</label><input id="nq-first" type="text" autocomplete="off"></div>
+          <div class="field"><label class="lbl" for="nq-last">Last name</label><input id="nq-last" type="text" autocomplete="off"></div>
+          <div class="field"><label class="lbl" for="nq-email">Email</label><input id="nq-email" type="email" autocomplete="off"></div>
+          <div class="field"><label class="lbl" for="nq-phone">Phone</label><input id="nq-phone" type="tel" autocomplete="off"></div>
+        </div>
+        <div class="field"><label class="lbl" for="nq-addr">Pool address</label><input id="nq-addr" type="text" placeholder="Street address" autocomplete="off"></div>
+        <div class="g3"><div class="field"><label class="lbl" for="nq-city">City</label><input id="nq-city" type="text" value="Austin"></div>
+          <div class="field"><label class="lbl" for="nq-state">State</label><input id="nq-state" type="text" value="TX"></div>
+          <div class="field"><label class="lbl" for="nq-zip">ZIP</label><input id="nq-zip" type="text" inputmode="numeric"></div></div>
+        <div class="g3">
+          <div class="field"><label class="lbl" for="nq-builder">Builder</label><select id="nq-builder"><option value="">None</option>${builders.map(b => `<option value="${b.id}"${preset.builder_id === b.id || (builders.length === 1 && !preset.builder_id) ? ' selected' : ''}>${h(b.name)}</option>`).join('')}</select></div>
+          <div class="field"><label class="lbl" for="nq-type">Pool</label><select id="nq-type">${opts([['new_build','New build'],['replaster','Replaster']], 'new_build')}</select></div>
+          <div class="field"><label class="lbl" for="nq-bill">Bill to</label><select id="nq-bill">${opts([['homeowner','Homeowner'],['builder','Builder']], 'homeowner')}</select></div>
+        </div>
+      </div>
+      <div class="field"><label class="lbl" for="nq-tpl">Start from template</label><select id="nq-tpl"></select></div>`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="nq-go">Create quote</button>`,
+    onMount: d => {
+      let mode = 'new';
+      const currentBuilder = () => {
+        if (mode === 'new') return $('#nq-builder').value || null;
+        const jid = $('#nq-job').value; const job = jid && byId(S.jobs, jid); return job ? job.builder_id : null;
+      };
+      const fillTemplates = () => {
+        const b = currentBuilder();
+        $('#nq-tpl').innerHTML = templatesFor(b).map(t => `<option value="${t.id}">${h(t.name)}${t.builder_id ? '' : ' (standard)'}</option>`).join('') + '<option value="">Blank quote</option>';
+      };
+      const fillJobs = () => {
+        const cid = $('#nq-cust').value, jobs = S.jobs.filter(j => j.customer_id === cid).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
+        $('#nq-job-wrap').hidden = !cid;
+        $('#nq-job').innerHTML = jobs.map(j => `<option value="${j.id}">Start-up created ${fmtShort(j.created_at)}${j.builder_id ? ` — ${h(byId(S.builders, j.builder_id)?.name || '')}` : ''}</option>`).join('') + '<option value="__new">New start-up for this customer</option>';
+        fillTemplates();
+      };
+      $$('[data-mode]', d).forEach(b => b.onclick = () => {
+        mode = b.dataset.mode; $$('[data-mode]', d).forEach(x => x.classList.toggle('on', x === b));
+        $('#nq-new').hidden = mode !== 'new'; $('#nq-existing').hidden = mode !== 'existing'; fillTemplates();
+      });
+      $('#nq-builder').onchange = fillTemplates; $('#nq-cust').onchange = fillJobs; $('#nq-job').onchange = fillTemplates;
+      fillTemplates();
+      $('#nq-go').onclick = async () => {
+        const btn = $('#nq-go'); btn.disabled = true;
+        try {
+          let customer, job;
+          if (mode === 'new') {
+            const c = { first_name: $('#nq-first').value.trim() || null, last_name: $('#nq-last').value.trim() || null, email: $('#nq-email').value.trim() || null,
+              phone: $('#nq-phone').value.trim() || null, address: $('#nq-addr').value.trim() || null, city: $('#nq-city').value.trim() || null,
+              state: $('#nq-state').value.trim() || null, zip: $('#nq-zip').value.trim() || null };
+            if (!c.first_name && !c.last_name && !c.address) { btn.disabled = false; return toast('Enter a customer name or pool address.', true); }
+            customer = await q(sb.from('su_customers').insert(c).select().single(), 'Adding customer'); S.customers.push(customer);
+          } else {
+            customer = byId(S.customers, $('#nq-cust').value);
+            if (!customer) { btn.disabled = false; return toast('Choose a customer.', true); }
+            if ($('#nq-job').value !== '__new') job = byId(S.jobs, $('#nq-job').value);
+          }
+          if (!job) {
+            const prev = S.jobs.find(j => j.customer_id === customer.id);
+            job = await q(sb.from('su_jobs').insert({ customer_id: customer.id, owner_id: S.user.id, notice_date: todayISO(),
+              builder_id: mode === 'new' ? ($('#nq-builder').value || null) : (prev?.builder_id || null),
+              pool_type: mode === 'new' ? $('#nq-type').value : (prev?.pool_type || 'new_build'),
+              bill_to: mode === 'new' ? $('#nq-bill').value : (prev?.bill_to || 'homeowner') }).select().single(), 'Creating job');
+            S.jobs.push(job); logActivity(job.id, 'job_created', 'Start-up created');
+          }
+          const tplId = $('#nq-tpl').value || null, tpl = tplId && byId(S.templates, tplId);
+          const lines = tpl ? linesFromTemplate(tpl.id, job.builder_id) : [];
+          const qt = await createQuote(job, customer, { lines, template: tpl });
+          d.close(); toast('Quote created'); go('quotes/' + qt.id);
+        } catch (_) { btn.disabled = false; }
+      };
+    }
+  });
+}
+
+async function createQuote(job, customer, { lines, template, fromQuote }) {
+  const rate = fromQuote ? Number(fromQuote.tax_rate) : Number(S.settings.tax_rate ?? 0.0825);
+  const tot = quoteTotals(lines, rate);
+  const version = Math.max(0, ...S.quotes.filter(x => x.job_id === job.id).map(x => x.version || 1)) + 1;
+  const title = fromQuote ? fromQuote.title : `${customer.address || custName(customer)} — Pool Start-Up Quote`;
+  const options = fromQuote ? { ...fromQuote.options, ...repInfo() }
+    : { ...quoteDefaults(), join_phase: template?.join_phase || 'prep', ...repInfo() };
+  const row = { job_id: job.id, ref: newRef(), title, version, status: 'draft', template_id: template?.id || fromQuote?.template_id || null,
+    tax_rate: rate, subtotal: tot.sub, tax: tot.tax, total: tot.total, comments: fromQuote?.comments || null,
+    disclosure_text: S.settings.disclosure_text || '', expires_on: addDays(todayISO(), Number(S.settings.quote_expiry_days || 30)),
+    options, created_by: S.user.id };
+  const qt = await q(sb.from('su_quotes').insert(row).select().single(), 'Creating quote');
+  if (lines.length) await q(sb.from('su_quote_lines').insert(lines.map((l, i) => ({ ...stripLine(l), quote_id: qt.id, sort: (i + 1) * 10 }))), 'Saving lines');
+  S.quotes.push(qt);
+  logActivity(job.id, 'quote_created', `Quote #${qt.ref} created${version > 1 ? ` (version ${version})` : ''}`, { quote_id: qt.id });
+  return qt;
+}
+const stripLine = l => ({ item_id: l.item_id || null, name: l.name, description: l.description || null, qty: Number(l.qty) || 0,
+  unit_price: Number(l.unit_price) || 0, list_price: l.list_price == null ? null : Number(l.list_price), taxable: !!l.taxable,
+  team: l.team || 'none', phase: l.phase || 'none', is_note: !!l.is_note });
+
+// ---------- editor ----------
+async function viewQuoteEdit(view, id) {
+  const qt = byId(S.quotes, id);
+  if (!qt) { view.innerHTML = `<div class="panel empty"><strong>Quote not found</strong><p><a href="#/quotes">Back to quotes</a></p></div>`; return; }
+  if (!S.draft || S.draft.kind !== 'quote' || S.draft.id !== id) {
+    view.innerHTML = '<div class="loading">Loading quote…</div>';
+    let lines;
+    try { lines = await q(sb.from('su_quote_lines').select('*').eq('quote_id', id).order('sort'), 'Loading quote'); } catch (_) { return; }
+    if (route().parts[1] !== id) return;
+    S.draft = { kind: 'quote', id, q: { ...qt, options: { ...quoteDefaults(), ...(qt.options || {}) } }, lines: lines.map(l => ({ ...l, qty: Number(l.qty), unit_price: Number(l.unit_price), list_price: l.list_price == null ? null : Number(l.list_price) })) };
+  }
+  const D = S.draft, Q = D.q, job = jobOf(Q), cust = custOf(job), builder = job && byId(S.builders, job.builder_id);
+  const editable = Q.status === 'draft';
+  const others = S.quotes.filter(x => x.job_id === Q.job_id && x.id !== Q.id).sort((a, b) => a.version - b.version);
+  const dis = editable ? '' : ' disabled';
+
+  const drawLines = () => {
+    const tot = quoteTotals(D.lines, Q.tax_rate);
+    $('#q-lines').innerHTML = D.lines.length ? D.lines.map((l, i) => {
+      const over = !l.is_note && l.list_price != null && Number(l.unit_price) !== Number(l.list_price);
+      return `<tr data-i="${i}">${editable ? `<td class="drag"><button class="icon-btn" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button><button class="icon-btn" data-down ${i === D.lines.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button></td>` : ''}
+        <td><div class="name">${h(l.name)} ${l.is_note ? '<span class="chip off">Note</span>' : `<span class="chip off">${h(label(PHASES, l.phase))}</span>`}${l.item_id ? '' : ' <span class="chip off">Custom</span>'}</div>
+          ${l.description ? `<div class="clip" style="white-space:normal;max-width:520px">${h(l.description)}</div>` : ''}</td>
+        <td class="w-qty">${l.is_note ? '' : editable ? `<input type="number" min="0" step="1" data-qty value="${fmtQty(l.qty)}" aria-label="Quantity">` : fmtQty(l.qty)}</td>
+        <td class="w-price right">${l.is_note ? '<span class="faint">—</span>' : editable ? `<input type="text" inputmode="decimal" class="right${over ? ' override' : ''}" data-price value="${Number(l.unit_price).toFixed(2)}" aria-label="Unit price">` : money(l.unit_price)}
+          ${over ? `<div class="hint override">List ${money(l.list_price)}</div>` : ''}</td>
+        <td class="right num">${l.is_note ? '' : money(l.qty * l.unit_price)}</td>
+        ${editable ? `<td style="white-space:nowrap"><button class="icon-btn" data-edit title="Edit line" aria-label="Edit line">✎</button><button class="icon-btn" data-rm title="Remove line" aria-label="Remove line">✕</button></td>` : ''}</tr>`;
+    }).join('') : `<tr><td colspan="6"><div class="empty" style="padding:20px"><strong>No lines yet</strong><p style="margin:0">Apply a template or add items below.</p></div></td></tr>`;
+    $('#q-totals').innerHTML = `<span class="muted">Subtotal</span><span class="right num">${money(tot.sub)}</span>
+      <span class="muted">Tax (${(Number(Q.tax_rate) * 100).toFixed(3).replace(/\.?0+$/, '')}%)</span><span class="right num">${money(tot.tax)}</span>
+      <span class="t">Total</span><span class="right num t">${money(tot.total)}</span>`;
+    if (!editable) return;
+    $$('#q-lines tr[data-i]').forEach(tr => {
+      const i = +tr.dataset.i, l = D.lines[i];
+      const mv = dd => { const j = i + dd; [D.lines[i], D.lines[j]] = [D.lines[j], D.lines[i]]; markDirty(); drawLines(); };
+      $('[data-up]', tr).onclick = () => mv(-1); $('[data-down]', tr).onclick = () => mv(1);
+      $('[data-rm]', tr).onclick = () => { D.lines.splice(i, 1); markDirty(); drawLines(); };
+      $('[data-edit]', tr).onclick = () => editLine(l, nl => { D.lines[i] = nl; markDirty(); drawLines(); });
+      const qy = $('[data-qty]', tr); qy && (qy.onchange = () => { l.qty = Math.max(0, Number(qy.value) || 0); markDirty(); drawLines(); });
+      const pr = $('[data-price]', tr); pr && (pr.onchange = () => { const v = numOrNull(pr.value);
+        if (v == null || Number.isNaN(v) || v < 0) { toast('Enter a valid price.', true); pr.value = Number(l.unit_price).toFixed(2); return; }
+        l.unit_price = v; markDirty(); drawLines(); });
+    });
+  };
+
+  const O = Q.options;
+  view.innerHTML = `<div class="view-head"><button class="btn btn-sm btn-ghost" id="back">‹ Quotes</button><h2>${h(Q.title)}</h2>${statusChip(Q.status)}
+      <div class="sub">#${h(Q.ref)}${Q.version > 1 ? `, version ${Q.version}` : ''}. Created ${fmtShort(Q.created_at)}${Q.sent_at ? `, sent ${fmtShort(Q.sent_at)}` : ''}${Q.accepted_at ? `, accepted ${fmtShort(Q.accepted_at)}` : ''}.</div></div>
+    ${editable ? '' : `<div class="notice">This quote has been ${Q.status === 'superseded' ? 'replaced by a newer version' : Q.status}, so it’s locked to match what the customer received. Use <b>New version</b> to make changes.</div>`}
+    <div class="qgrid">
+      <div class="panel panel-pad"><div class="row" style="justify-content:space-between;align-items:flex-start"><h3>Customer</h3><button class="btn btn-sm" id="edit-cust">Edit</button></div>
+        <div class="kv"><div>${h(custName(cust))}</div><div class="muted">${h(custAddr(cust)) || '<span class="faint">No address</span>'}</div>
+          <div class="muted">${[cust?.email, cust?.phone].filter(Boolean).map(h).join('<br>') || '<span class="faint">No contact info</span>'}</div></div>
+        <div class="kv2"><span class="faint">Builder</span><span>${builder ? h(builder.name) : '—'}</span>
+          <span class="faint">Pool</span><span>${job?.pool_type === 'replaster' ? 'Replaster' : 'New build'}</span>
+          <span class="faint">Bill to</span><span>${job?.bill_to === 'builder' ? 'Builder' : 'Homeowner'}</span></div>
+        ${others.length ? `<div class="kv2" style="margin-top:10px"><span class="faint">Other versions</span><span>${others.map(o => `<a href="#/quotes/${o.id}">v${o.version}</a> ${statusChip(o.status)}`).join('<br>')}</span></div>` : ''}
+      </div>
+      <div class="panel panel-pad"><h3>Quote details</h3>
+        <div class="field"><label class="lbl" for="q-title">Title on the PDF</label><input id="q-title" type="text" value="${h(Q.title)}"${dis}></div>
+        <div class="g2">
+          <div class="field"><label class="lbl" for="q-exp">Valid until</label><input id="q-exp" type="date" value="${h(Q.expires_on || '')}"${dis}></div>
+          <div class="field"><label class="lbl" for="q-join">Start-up begins at</label><select id="q-join"${dis}>${opts(JOIN_PHASES, O.join_phase || 'prep')}</select></div>
+        </div>
+        <div class="field" style="margin:0"><label class="lbl" for="q-comments">Notes to the customer (optional)</label><textarea id="q-comments" rows="2" placeholder="Prints above the line items"${dis}>${h(Q.comments || '')}</textarea></div>
+      </div>
+    </div>
+    <div class="panel">
+      ${editable ? `<div class="panel-pad row" style="border-bottom:1px solid var(--border)"><span class="muted" style="font-size:13px">Replace lines with template</span>
+        <select id="q-tpl" style="max-width:320px"><option value="">Choose a template…</option>${templatesFor(job?.builder_id).map(t => `<option value="${t.id}">${h(t.name)}</option>`).join('')}</select></div>` : ''}
+      <div class="tbl-wrap"><table class="tbl editor-lines"><thead><tr>${editable ? '<th></th>' : ''}<th>Line</th><th>Qty</th><th class="right">Unit price</th><th class="right">Total</th>${editable ? '<th></th>' : ''}</tr></thead><tbody id="q-lines"></tbody></table></div>
+      ${editable ? `<div class="panel-pad row" style="border-top:1px solid var(--border)">
+        <select id="q-add" style="max-width:380px"><option value="">Add a line item…</option>${S.items.filter(i => i.active).map(i => `<option value="${i.id}">${h(i.name)}${i.is_note ? ' (note)' : ` — ${money(resolvedPrice(i.id, job?.builder_id))}`}</option>`).join('')}</select>
+        <button class="btn btn-sm" id="q-custom">Custom line</button></div>` : ''}
+      <div class="totals" id="q-totals"></div>
+    </div>
+    <div class="panel panel-pad"><h3>What prints on the PDF</h3><p class="desc">Defaults come from Settings → Quote & disclosure.</p>
+      <div style="display:grid;gap:8px">
+        <label class="check"><input type="checkbox" id="o-disc"${O.show_disclosure ? ' checked' : ''}${dis}> Plaster start-up disclosure</label>
+        <label class="check"><input type="checkbox" id="o-ack"${O.show_ack ? ' checked' : ''}${dis}> Acknowledge by text or email instructions</label>
+        <label class="check"><input type="checkbox" id="o-sig"${O.show_signature ? ' checked' : ''}${dis}> Signature, date, and printed name block</label>
+      </div></div>
+    <div class="savebar"><span class="dirty" id="dirty-flag"${S.dirty ? '' : ' hidden'}>Unsaved changes</span>
+      ${Q.status === 'draft' ? '<button class="btn btn-ghost btn-danger" id="q-del">Delete draft</button>' : ''}
+      <button class="btn" id="q-tpl-save">Save as template</button>
+      ${Q.status !== 'draft' ? '<button class="btn" id="q-ver">New version</button>' : ''}
+      ${Q.status === 'draft' ? '<button class="btn" id="q-save">Save draft</button><button class="btn" id="q-sent">Mark as sent</button>' : ''}
+      ${Q.status === 'sent' ? '<button class="btn" id="q-decl">Mark declined</button><button class="btn" id="q-acc">Mark accepted</button>' : ''}
+      <button class="btn btn-primary" id="q-pdf">Download PDF</button></div>`;
+
+  drawLines();
+  $('#back').onclick = () => go('quotes');
+  $('#edit-cust').onclick = () => editCustomer(job, cust, () => { S.draft = D; viewQuoteEdit(view, id); });
+  if (editable) {
+    $('#q-title').oninput = e => { Q.title = e.target.value; markDirty(); };
+    $('#q-exp').onchange = e => { Q.expires_on = e.target.value || null; markDirty(); };
+    $('#q-join').onchange = e => { O.join_phase = e.target.value; markDirty(); };
+    $('#q-comments').oninput = e => { Q.comments = e.target.value; markDirty(); };
+    $('#o-disc').onchange = e => { O.show_disclosure = e.target.checked; markDirty(); };
+    $('#o-ack').onchange = e => { O.show_ack = e.target.checked; markDirty(); };
+    $('#o-sig').onchange = e => { O.show_signature = e.target.checked; markDirty(); };
+    $('#q-tpl').onchange = async e => {
+      const t = byId(S.templates, e.target.value); e.target.value = ''; if (!t) return;
+      if (D.lines.length && !(await confirmDialog('Replace lines', `Replace the ${D.lines.length} current line${D.lines.length > 1 ? 's' : ''} with “${h(t.name)}”?`, 'Replace lines', false))) return;
+      D.lines = linesFromTemplate(t.id, job?.builder_id); Q.template_id = t.id; O.join_phase = t.join_phase; $('#q-join').value = t.join_phase; markDirty(); drawLines();
+    };
+    $('#q-add').onchange = e => { const it = byId(S.items, e.target.value); e.target.value = ''; if (!it) return; D.lines.push(lineFromItem(it, job?.builder_id)); markDirty(); drawLines(); };
+    $('#q-custom').onclick = () => editLine(null, nl => { D.lines.push(nl); markDirty(); drawLines(); });
+  }
+
+  const save = async () => {
+    if (!Q.title.trim()) { toast('Give the quote a title.', true); return false; }
+    const tot = quoteTotals(D.lines, Q.tax_rate);
+    const row = { title: Q.title.trim(), expires_on: Q.expires_on || null, comments: Q.comments?.trim() || null, template_id: Q.template_id || null,
+      options: { ...O, ...repInfo() }, subtotal: tot.sub, tax: tot.tax, total: tot.total, disclosure_text: S.settings.disclosure_text || '' };
+    try {
+      Object.assign(qt, await q(sb.from('su_quotes').update(row).eq('id', id).select().single(), 'Saving quote'));
+      await q(sb.from('su_quote_lines').delete().eq('quote_id', id), 'Saving lines');
+      if (D.lines.length) await q(sb.from('su_quote_lines').insert(D.lines.map((l, i) => ({ ...stripLine(l), quote_id: id, sort: (i + 1) * 10 }))), 'Saving lines');
+      Object.assign(Q, qt, { options: { ...O, ...repInfo() } }); S.dirty = false; const f = $('#dirty-flag'); f && (f.hidden = true);
+      return true;
+    } catch (_) { return false; }
+  };
+  const setStatus = async (status, extra = {}) => {
+    try { Object.assign(qt, await q(sb.from('su_quotes').update({ status, ...extra }).eq('id', id).select().single(), 'Updating quote')); } catch (_) { return false; }
+    Object.assign(Q, { status: qt.status, sent_at: qt.sent_at, accepted_at: qt.accepted_at }); return true;
+  };
+  const rerender = () => { S.draft = null; S.dirty = false; viewQuoteEdit(view, id); };
+
+  $('#q-save') && ($('#q-save').onclick = async () => { if (await save()) toast('Draft saved'); });
+  $('#q-pdf').onclick = async () => {
+    const btn = $('#q-pdf'); btn.disabled = true; btn.textContent = 'Preparing PDF…';
+    try {
+      if (editable && S.dirty && !(await save())) return;
+      await downloadQuotePdf(Q, D.lines, job, cust, builder);
+      logActivity(job.id, 'pdf_downloaded', `PDF downloaded for quote #${Q.ref}`, { quote_id: id });
+    } catch (e) { fail(e, 'Making PDF'); }
+    finally { btn.disabled = false; btn.textContent = 'Download PDF'; }
+  };
+  $('#q-sent') && ($('#q-sent').onclick = async () => {
+    if (!D.lines.length) return toast('Add at least one line before marking the quote sent.', true);
+    if (!(await confirmDialog('Mark as sent', 'This locks the quote so it matches what the customer received. You can still make a new version later.', 'Mark as sent', false))) return;
+    if (!(await save())) return;
+    if (!(await setStatus('sent', { sent_at: new Date().toISOString() }))) return;
+    for (const o of S.quotes.filter(x => x.job_id === Q.job_id && x.id !== id && ['draft','sent'].includes(x.status))) {
+      try { Object.assign(o, await q(sb.from('su_quotes').update({ status: 'superseded' }).eq('id', o.id).select().single(), 'Updating older versions')); } catch (_) {}
+    }
+    await advanceJob(job, 'quote_sent');
+    logActivity(job.id, 'quote_sent', `Quote #${Q.ref} sent`, { quote_id: id });
+    toast('Marked as sent'); rerender();
+  });
+  $('#q-acc') && ($('#q-acc').onclick = async () => {
+    if (!(await setStatus('accepted', { accepted_at: new Date().toISOString() }))) return;
+    await advanceJob(job, 'accepted', { join_phase: O.join_phase || 'prep' });
+    logActivity(job.id, 'quote_accepted', `Quote #${Q.ref} accepted (${money(Q.total)})`, { quote_id: id });
+    toast(job.disclosure_ack ? 'Marked accepted' : 'Marked accepted. Remember to record the disclosure acknowledgment.'); rerender();
+  });
+  $('#q-decl') && ($('#q-decl').onclick = async () => {
+    if (!(await setStatus('declined'))) return;
+    logActivity(job.id, 'quote_declined', `Quote #${Q.ref} declined`, { quote_id: id });
+    toast('Marked declined'); rerender();
+  });
+  $('#q-ver') && ($('#q-ver').onclick = async () => {
+    try { const nq = await createQuote(job, cust, { lines: D.lines, fromQuote: Q }); S.draft = null; toast(`Version ${nq.version} created`); go('quotes/' + nq.id); } catch (_) {}
+  });
+  $('#q-del') && ($('#q-del').onclick = async () => {
+    if (!(await confirmDialog('Delete draft', `Delete draft quote #${h(Q.ref)}? The customer and job stay.`))) return;
+    try { await q(sb.from('su_quotes').delete().eq('id', id), 'Deleting quote'); S.quotes = S.quotes.filter(x => x.id !== id); S.dirty = false; S.draft = null; toast('Draft deleted'); go('quotes'); } catch (_) {}
+  });
+  $('#q-tpl-save').onclick = () => saveQuoteAsTemplate(D.lines, job, Q);
+}
+
+function editLine(line, onSave) {
+  const isNew = !line;
+  const l = line ? { ...line } : { item_id: null, name: '', description: '', qty: 1, unit_price: 0, list_price: null, taxable: true, team: 'none', phase: 'none', is_note: false };
+  openDialog({
+    title: isNew ? 'Custom line' : 'Edit line',
+    body: `${isNew ? '<p class="desc" style="margin:0 0 12px">A one-off line for this quote only. To reuse it, add it under Settings → Line items.</p>' : ''}
+      <div class="field"><label class="lbl" for="l-name">Name</label><input id="l-name" type="text" value="${h(l.name)}"></div>
+      <div class="field"><label class="lbl" for="l-desc">Description</label><textarea id="l-desc" rows="3">${h(l.description || '')}</textarea></div>
+      <div class="g2"><div class="field"><label class="lbl" for="l-qty">Quantity</label><input id="l-qty" type="number" min="0" step="1" value="${fmtQty(l.qty)}"></div>
+        <div class="field"><label class="lbl" for="l-price">Unit price</label><input id="l-price" type="text" inputmode="decimal" value="${Number(l.unit_price).toFixed(2)}">
+          ${l.list_price != null && !l.is_note ? `<div class="hint">List price ${money(l.list_price)}</div>` : ''}</div></div>
+      <div class="g2"><div class="field"><label class="lbl" for="l-phase">Timeline</label><select id="l-phase">${opts(PHASES, l.phase)}</select></div>
+        <div class="field"><label class="lbl" for="l-team">Team</label><select id="l-team">${opts(TEAMS, l.team)}</select></div></div>
+      <div style="display:grid;gap:8px"><label class="check"><input type="checkbox" id="l-tax"${l.taxable ? ' checked' : ''}> Charge sales tax</label>
+        <label class="check"><input type="checkbox" id="l-note"${l.is_note ? ' checked' : ''}> Note line — prints the text only, no price</label></div>`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="l-save">${isNew ? 'Add line' : 'Save line'}</button>`,
+    onMount: d => $('#l-save').onclick = () => {
+      const price = numOrNull($('#l-price').value), qty = Number($('#l-qty').value);
+      const nl = { ...l, name: $('#l-name').value.trim(), description: $('#l-desc').value.trim(), qty: Number.isFinite(qty) && qty >= 0 ? qty : 1,
+        unit_price: price ?? 0, phase: $('#l-phase').value, team: $('#l-team').value, is_note: $('#l-note').checked };
+      nl.taxable = $('#l-tax').checked && !nl.is_note;
+      if (nl.is_note) nl.unit_price = 0;
+      if (!nl.name) return toast('Give the line a name.', true);
+      if (Number.isNaN(price) || price < 0) return toast('Enter a valid price.', true);
+      d.close(); onSave(nl);
+    }
+  });
+}
+
+function editCustomer(job, c, after) {
+  if (!job || !c) return;
+  openDialog({
+    title: 'Customer & job',
+    body: `<div class="g2">
+        <div class="field"><label class="lbl" for="c-first">First name</label><input id="c-first" type="text" value="${h(c.first_name)}"></div>
+        <div class="field"><label class="lbl" for="c-last">Last name</label><input id="c-last" type="text" value="${h(c.last_name)}"></div>
+        <div class="field"><label class="lbl" for="c-email">Email</label><input id="c-email" type="email" value="${h(c.email)}"></div>
+        <div class="field"><label class="lbl" for="c-phone">Phone</label><input id="c-phone" type="tel" value="${h(c.phone)}"></div></div>
+      <div class="field"><label class="lbl" for="c-addr">Pool address</label><input id="c-addr" type="text" value="${h(c.address)}"></div>
+      <div class="g3"><div class="field"><label class="lbl" for="c-city">City</label><input id="c-city" type="text" value="${h(c.city)}"></div>
+        <div class="field"><label class="lbl" for="c-state">State</label><input id="c-state" type="text" value="${h(c.state)}"></div>
+        <div class="field"><label class="lbl" for="c-zip">ZIP</label><input id="c-zip" type="text" value="${h(c.zip)}"></div></div>
+      <div class="g3">
+        <div class="field"><label class="lbl" for="j-builder">Builder</label><select id="j-builder"><option value="">None</option>${S.builders.filter(b => b.active || b.id === job.builder_id).map(b => `<option value="${b.id}"${b.id === job.builder_id ? ' selected' : ''}>${h(b.name)}</option>`).join('')}</select></div>
+        <div class="field"><label class="lbl" for="j-type">Pool</label><select id="j-type">${opts([['new_build','New build'],['replaster','Replaster']], job.pool_type)}</select></div>
+        <div class="field"><label class="lbl" for="j-bill">Bill to</label><select id="j-bill">${opts([['homeowner','Homeowner'],['builder','Builder']], job.bill_to)}</select></div></div>
+      <div class="g2"><div class="field"><label class="lbl" for="c-hs">HubSpot link</label><input id="c-hs" type="text" value="${h(c.hubspot_url)}" placeholder="https://app.hubspot.com/…"></div>
+        <div class="field"><label class="lbl" for="c-pb">PoolBrain link</label><input id="c-pb" type="text" value="${h(c.poolbrain_url)}"></div></div>
+      <div class="hint">Changing the builder doesn’t reprice existing lines. Re-apply a template to use the new builder’s prices.</div>`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="c-save">Save changes</button>`,
+    onMount: d => $('#c-save').onclick = async () => {
+      const v = id => $(id).value.trim() || null;
+      try {
+        Object.assign(c, await q(sb.from('su_customers').update({ first_name: v('#c-first'), last_name: v('#c-last'), email: v('#c-email'), phone: v('#c-phone'),
+          address: v('#c-addr'), city: v('#c-city'), state: v('#c-state'), zip: v('#c-zip'), hubspot_url: v('#c-hs'), poolbrain_url: v('#c-pb') }).eq('id', c.id).select().single(), 'Saving customer'));
+        Object.assign(job, await q(sb.from('su_jobs').update({ builder_id: $('#j-builder').value || null, pool_type: $('#j-type').value, bill_to: $('#j-bill').value }).eq('id', job.id).select().single(), 'Saving job'));
+        d.close(); toast('Customer saved'); after && after();
+      } catch (_) {}
+    }
+  });
+}
+
+function saveQuoteAsTemplate(lines, job, Q) {
+  const catalog = lines.filter(l => l.item_id && byId(S.items, l.item_id));
+  const skipped = lines.length - catalog.length;
+  openDialog({
+    title: 'Save as template',
+    body: `<div class="field"><label class="lbl" for="st-name">Template name</label><input id="st-name" type="text" value="${h(Q.title.replace(/^.*—\s*/, ''))}"></div>
+      <div class="field"><label class="lbl" for="st-b">Available for</label><select id="st-b">${opts([['', 'All builders'], ...S.builders.filter(b => b.active).map(b => [b.id, b.name])], job?.builder_id || '')}</select></div>
+      ${skipped ? `<div class="hint">${skipped} custom line${skipped > 1 ? 's' : ''} won’t be included. Add ${skipped > 1 ? 'them' : 'it'} under Settings → Line items first to reuse ${skipped > 1 ? 'them' : 'it'}.</div>` : ''}`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="st-save">Save template</button>`,
+    onMount: d => $('#st-save').onclick = async () => {
+      const name = $('#st-name').value.trim(); if (!name) return toast('Give the template a name.', true);
+      const b = $('#st-b').value || null;
+      try {
+        const t = await q(sb.from('su_templates').insert({ name, builder_id: b, join_phase: Q.options?.join_phase || 'prep', active: true,
+          sort: Math.max(0, ...S.templates.map(x => x.sort || 0)) + 10 }).select().single(), 'Saving template');
+        S.templates.push(t);
+        const rows = catalog.map((l, i) => { const it = byId(S.items, l.item_id), list = resolvedPrice(it.id, b), bp = builderPrice(b, it.id);
+          const stdDesc = bp?.description_override || it.description || '';
+          return { template_id: t.id, item_id: it.id, qty: l.qty, unit_price: Number(l.unit_price) === list ? null : Number(l.unit_price),
+            name: l.name === it.name ? null : l.name, description: (l.description || '') === stdDesc ? null : l.description, sort: (i + 1) * 10 }; });
+        if (rows.length) S.templateLines.push(...await q(sb.from('su_template_lines').insert(rows).select(), 'Saving template lines'));
+        d.close(); toast('Template saved');
+      } catch (_) {}
+    }
+  });
+}
+
+// ---------- PDF ----------
+let _pdfLib, _logo;
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('Couldn’t load ' + src)); document.head.appendChild(s); });
+}
+async function pdfLib() {
+  if (!_pdfLib) _pdfLib = (async () => {
+    await loadScript('https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js');
+    await loadScript('https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js');
+    return window.pdfMake;
+  })().catch(e => { _pdfLib = null; throw e; });
+  return _pdfLib;
+}
+async function logoData() {
+  if (_logo !== undefined) return _logo;
+  try {
+    const blob = await (await fetch('poolie-logo.png', { cache: 'force-cache' })).blob();
+    if (!blob.type.startsWith('image/')) throw new Error('not an image');
+    _logo = await new Promise(r => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(blob); });
+  } catch (_) { _logo = null; }
+  return _logo;
+}
+
+function disclosureBlocks(text, C) {
+  // The disclosure's own "acknowledgment" section is replaced by the per-quote options (text/email box and/or signature block).
+  const out = []; let bullets = [], para = [], skipping = false;
+  const flushB = () => { if (bullets.length) { out.push({ ul: bullets.map(b => ({ text: b, margin: [0, 0, 0, 2] })), margin: [0, 0, 0, 6], color: C.ink }); bullets = []; } };
+  const flushP = () => { if (para.length) { out.push({ text: para.join(' '), margin: [0, 0, 0, 6] }); para = []; } };
+  String(text || '').split('\n').forEach((raw, idx) => {
+    const t = raw.trim();
+    if (!t) { flushB(); flushP(); return; }
+    if (/^[-•]\s+/.test(t)) { flushP(); bullets.push(t.replace(/^[-•]\s+/, '')); return; }
+    const isHead = t.length < 80 && /[A-Z]/.test(t) && t === t.toUpperCase();
+    if (isHead) { flushB(); flushP(); skipping = /ACKNOWLEDG/.test(t) && idx > 0; if (!skipping) out.push(idx === 0 ? { text: t, style: 'discTitle' } : { text: t, style: 'discHead' }); return; }
+    if (skipping && !/^This document references/i.test(t)) return;
+    flushB(); para.push(t);
+  });
+  flushB(); flushP();
+  return out;
+}
+
+function buildQuotePdf(Q, lines, job, cust, builder, logo) {
+  const C = { blue: '#1676B7', orange: '#F39A2B', ink: '#1E2B38', mute: '#5E6E7E', rule: '#DCE3EA', tint: '#F1F6FA' };
+  const co = S.settings.company || {}, O = { ...quoteDefaults(), ...(Q.options || {}) };
+  const tot = quoteTotals(lines, Q.tax_rate);
+  const W = 516;
+  const coLine = [co.address, [co.city, [co.state, co.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(', ');
+  const partyBlock = (heading, rows) => ({ stack: [{ text: heading, style: 'label' }, ...rows.filter(Boolean).map((r, i) => ({ text: r, bold: i === 0, margin: [0, i === 0 ? 2 : 1, 0, 0] }))] });
+  const custRows = [custName(cust), cust?.address, [cust?.city, [cust?.state, cust?.zip].filter(Boolean).join(' ')].filter(Boolean).join(', '), cust?.email, cust?.phone];
+  const parties = [];
+  if (job?.bill_to === 'builder' && builder) {
+    parties.push(partyBlock('Bill to', [builder.name, builder.contact_name, builder.email, builder.phone]));
+    parties.push(partyBlock('Service address', custRows));
+  } else {
+    parties.push(partyBlock('Prepared for', custRows));
+    if (builder) parties.push(partyBlock('Builder', [builder.name, builder.contact_name]));
+  }
+  parties.push(partyBlock('Prepared by', [O.rep_name, co.name, O.rep_email, O.rep_phone]));
+
+  const body = [[{ text: 'Service', style: 'th' }, { text: 'Qty', style: 'th', alignment: 'center' }, { text: 'Price', style: 'th', alignment: 'right' }, { text: 'Amount', style: 'th', alignment: 'right' }]];
+  const noteRows = new Set();
+  lines.forEach(l => {
+    if (l.is_note) {
+      noteRows.add(body.length);
+      body.push([{ colSpan: 4, stack: [{ text: l.name, bold: true, color: C.ink }, l.description ? { text: l.description, color: C.mute, margin: [0, 2, 0, 0] } : ''], fillColor: C.tint, margin: [4, 4, 4, 4] }, '', '', '']);
+      return;
+    }
+    body.push([
+      { stack: [{ text: l.name, bold: true }, l.description ? { text: l.description, color: C.mute, fontSize: 8.5, margin: [0, 2, 0, 0] } : ''] },
+      { text: fmtQty(l.qty), alignment: 'center' },
+      { text: money(l.unit_price), alignment: 'right' },
+      { text: money(l.qty * l.unit_price), alignment: 'right' + '' },
+    ]);
+  });
+
+  const content = [
+    { columns: [
+        logo ? { image: logo, width: 118 } : { text: co.name || 'Poolie', fontSize: 22, bold: true, color: C.blue },
+        { width: '*', stack: [
+          { text: 'Pool Start-Up Quote', fontSize: 17, bold: true, alignment: 'right', color: C.ink },
+          { text: `Quote #${Q.ref}${Q.version > 1 ? ` (v${Q.version})` : ''}`, alignment: 'right', color: C.mute, margin: [0, 4, 0, 0] },
+          { text: `Date: ${fmtDate(Q.sent_at || Q.updated_at || Q.created_at)}`, alignment: 'right', color: C.mute },
+          Q.expires_on ? { text: `Valid until: ${fmtDate(Q.expires_on)}`, alignment: 'right', color: C.mute } : '' ] } ] },
+    { canvas: [{ type: 'rect', x: 0, y: 0, w: W, h: 2.5, color: C.blue }, { type: 'rect', x: 0, y: 0, w: 56, h: 2.5, color: C.orange }], margin: [0, 16, 0, 16] },
+    { text: Q.title, fontSize: 14, bold: true, color: C.ink, margin: [0, 0, 0, 12] },
+    { columns: parties.map(p => ({ width: '*', ...p })), columnGap: 18, margin: [0, 0, 0, 18] },
+    Q.comments ? { text: Q.comments, margin: [0, 0, 0, 14], color: C.ink } : '',
+    { table: { headerRows: 1, widths: ['*', 34, 66, 72], body, dontBreakRows: true },
+      layout: { hLineWidth: (i, n) => (i === 1 ? 1.2 : (i === 0 || i === n.table.body.length) ? 0 : 0.5),
+        hLineColor: i => (i === 1 ? C.blue : C.rule), vLineWidth: () => 0,
+        paddingTop: i => (i === 0 ? 0 : 7), paddingBottom: i => (i === 0 ? 5 : 7), paddingLeft: () => 4, paddingRight: () => 4 } },
+    { columns: [{ width: '*', text: '' }, { width: 220, margin: [0, 10, 0, 0], table: { widths: ['*', 80], body: [
+        [{ text: 'Subtotal', color: C.mute }, { text: money(tot.sub), alignment: 'right' }],
+        [{ text: `Tax (${(Number(Q.tax_rate) * 100).toFixed(3).replace(/\.?0+$/, '')}%)`, color: C.mute }, { text: money(tot.tax), alignment: 'right' }],
+        [{ text: 'Total', bold: true, fontSize: 12, color: C.blue, margin: [0, 3, 0, 0] }, { text: money(tot.total), bold: true, fontSize: 12, alignment: 'right', color: C.blue, margin: [0, 3, 0, 0] }] ] },
+      layout: { hLineWidth: i => (i === 2 ? 1 : 0), hLineColor: () => C.rule, vLineWidth: () => 0, paddingTop: () => 3, paddingBottom: () => 3, paddingLeft: () => 0, paddingRight: () => 4 } }] },
+  ];
+
+  if (O.show_disclosure && (Q.disclosure_text || S.settings.disclosure_text)) {
+    content.push({ stack: disclosureBlocks(Q.disclosure_text || S.settings.disclosure_text, C), fontSize: 8.5, color: C.ink, margin: [0, 26, 0, 0] });
+  }
+  if (O.show_ack) {
+    const stmt = S.settings.ack_statement || 'I have received and acknowledged the Poolie Pool Service Plaster Start-Up Disclosure & Liability Waiver.';
+    content.push({ unbreakable: true, margin: [0, 14, 0, 0], table: { widths: ['*'], body: [[{ fillColor: C.tint, margin: [12, 10, 12, 10], stack: [
+      { text: 'How to acknowledge this disclosure', bold: true, color: C.blue, fontSize: 10.5, margin: [0, 0, 0, 5] },
+      { text: ['Reply to this quote by ', { text: 'text or email', bold: true }, ' with this message:'] },
+      { text: `“${stmt}”`, italics: true, margin: [0, 5, 0, 5] },
+      { text: 'Your reply serves as electronic acknowledgment. No physical signature is required. A copy is kept with your account.', color: C.mute, fontSize: 8.5 } ] }]] },
+      layout: { hLineWidth: () => 0, vLineWidth: i => (i === 0 ? 3 : 0), vLineColor: () => C.blue } });
+  }
+  if (O.show_signature) {
+    const sigLine = (lbl, w) => ({ width: w, stack: [{ canvas: [{ type: 'line', x1: 0, y1: 0, x2: w === '*' ? 230 : w, y2: 0, lineWidth: 0.8, lineColor: C.ink }], margin: [0, 30, 0, 3] }, { text: lbl, color: C.mute, fontSize: 8.5 }] });
+    content.push({ unbreakable: true, margin: [0, 20, 0, 0], stack: [
+      { text: 'Acceptance', bold: true, fontSize: 10.5, color: C.ink },
+      { text: 'By signing, you accept this quote and acknowledge the plaster start-up disclosure above.', color: C.mute, fontSize: 8.5, margin: [0, 2, 0, 0] },
+      { columns: [sigLine('Signature', 230), { width: 30, text: '' }, sigLine('Date', 140)] },
+      { columns: [sigLine('Printed name', 230)] } ] });
+  }
+
+  return {
+    pageSize: 'LETTER', pageMargins: [48, 48, 48, 56],
+    info: { title: Q.title, author: co.name || 'Poolie', subject: `Quote #${Q.ref}` },
+    footer: (cur, count) => ({ margin: [48, 18, 48, 0], columns: [
+      { text: [co.name, coLine, co.phone].filter(Boolean).join('   |   '), fontSize: 7.5, color: C.mute },
+      { text: `Page ${cur} of ${count}`, alignment: 'right', fontSize: 7.5, color: C.mute, width: 70 } ] }),
+    content,
+    styles: {
+      label: { fontSize: 8, color: C.mute, bold: true },
+      th: { fontSize: 8.5, bold: true, color: C.mute },
+      discTitle: { fontSize: 11, bold: true, color: C.blue, margin: [0, 0, 0, 6] },
+      discHead: { fontSize: 9, bold: true, color: C.ink, margin: [0, 6, 0, 3] },
+    },
+    defaultStyle: { fontSize: 9.5, color: C.ink, lineHeight: 1.2 },
+  };
+}
+
+async function downloadQuotePdf(Q, lines, job, cust, builder) {
+  const [pm, logo] = await Promise.all([pdfLib(), logoData()]);
+  const dd = buildQuotePdf(Q, lines, job, cust, builder, logo);
+  const name = `${Q.title} - Quote ${Q.ref}`.replace(/[\\/:*?"<>|]+/g, '').replace(/\s+/g, ' ').trim().slice(0, 120) + '.pdf';
+  window.__lastPdf = { dd, name };
+  pm.createPdf(dd).download(name);
+}
+
+// ---------- my details ----------
+function myDetailsDialog() {
+  const md = S.user.user_metadata || {};
+  openDialog({
+    title: 'My details',
+    body: `<p class="desc" style="margin:0 0 12px">Printed in the “Prepared by” section of your quotes.</p>
+      <div class="field"><label class="lbl" for="md-name">Full name</label><input id="md-name" type="text" value="${h(md.full_name)}" autocomplete="name"></div>
+      <div class="field"><label class="lbl" for="md-phone">Phone</label><input id="md-phone" type="tel" value="${h(md.phone)}" autocomplete="tel"></div>
+      <div class="hint">Email: ${h(S.user.email)}</div>`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="md-save">Save details</button>`,
+    onMount: d => $('#md-save').onclick = async () => {
+      const { data, error } = await sb.auth.updateUser({ data: { full_name: $('#md-name').value.trim(), phone: $('#md-phone').value.trim() } });
+      if (error) return fail(error, 'Saving details');
+      if (data?.user) S.user = data.user;
+      d.close(); toast('Details saved'); render();
+    }
+  });
 }
 
 // =====================================================================
