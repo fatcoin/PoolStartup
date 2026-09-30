@@ -192,6 +192,91 @@
   .kv2 { display: grid; grid-template-columns: 110px 1fr; gap: 5px 10px; font-size: 13px; }
   .loading { padding: 60px; text-align: center; color: var(--text-muted); }
 
+
+  /* ===================== POOL WATER (matches Commercial Pools / Master Tracker) ===================== */
+  :root { --glass: linear-gradient(160deg, rgba(255,255,255,.09) 0%, rgba(24,37,56,.50) 42%, rgba(16,26,41,.60) 100%);
+    --glass-shadow: inset 0 1px 0 rgba(255,255,255,.13), inset 0 -1px 0 rgba(0,0,0,.22), 0 12px 38px rgba(0,0,0,.38); }
+  .water-bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+  .water-bg::before { content: ''; position: absolute; inset: 0;
+    background: url('pool-bg.jpg') center/cover no-repeat,
+      radial-gradient(ellipse at 20% 15%, rgba(72,202,228,.35), transparent 55%),
+      radial-gradient(ellipse at 80% 70%, rgba(0,119,182,.45), transparent 60%),
+      linear-gradient(160deg, #0a4d68 0%, #05324a 50%, #031d2e 100%);
+    animation: water-drift 46s ease-in-out infinite; will-change: transform; }
+  .water-bg::after { content: ''; position: absolute; inset: 0;
+    background: linear-gradient(160deg, rgba(9,20,32,.52) 0%, rgba(9,18,29,.62) 55%, rgba(8,15,24,.72) 100%); }
+  @keyframes water-drift { 0% { transform: scale(1.08) translate3d(0,0,0); } 50% { transform: scale(1.14) translate3d(-1.5%,-1%,0); } 100% { transform: scale(1.08) translate3d(0,0,0); } }
+  @media (prefers-reduced-motion: reduce) { .water-bg::before { animation: none; } }
+  body { background: var(--bg); }
+  #root { animation: pw-reveal .45s ease-in-out; }
+  @keyframes pw-reveal { from { opacity: 0; filter: blur(2px); } to { opacity: 1; filter: blur(0); } }
+  @media (prefers-reduced-motion: reduce) { #root { animation: none; } }
+  .panel { background: var(--glass); border: 1px solid var(--border); box-shadow: var(--glass-shadow); }
+  .tbl th { background: rgba(20,32,50,.92); }
+  .tbl thead tr:first-child th:first-child { border-top-left-radius: var(--radius); }
+  .tbl thead tr:first-child th:last-child { border-top-right-radius: var(--radius); }
+  .top { background: rgba(10,17,26,.72); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+  .savebar { background: linear-gradient(to top, rgba(10,17,26,.92) 60%, transparent); }
+  .btn { border: 1px solid rgba(255,255,255,.08); }
+  .btn-ghost { border-color: transparent; }
+  input[type="checkbox"] { -webkit-appearance: none; appearance: none; width: 18px !important; height: 18px !important; margin: 0;
+    border: 1.5px solid rgba(255,255,255,.30); border-radius: 5px; background: transparent; position: relative; cursor: pointer; vertical-align: middle; flex: none;
+    transition: background .15s var(--ease), border-color .15s var(--ease), box-shadow .15s var(--ease); }
+  input[type="checkbox"]:checked { background: var(--accent); border-color: var(--accent); box-shadow: 0 3px 10px rgba(0,180,216,.4); }
+  input[type="checkbox"]:disabled { opacity: .4; cursor: default; }
+  input[type="checkbox"]::after { content: ""; position: absolute; left: 5px; top: 1px; width: 5px; height: 9px; border: solid #fff; border-width: 0 2px 2px 0;
+    border-radius: 1px; transform: rotate(45deg) scale(0); opacity: 0; transition: transform .2s cubic-bezier(.34,1.45,.64,1), opacity .12s; }
+  input[type="checkbox"]:checked::after { transform: rotate(45deg) scale(1); opacity: 1; }
+  @media (prefers-reduced-motion: reduce) { input[type="checkbox"]::after { transition: none; } }
+
+  /* ---------- jobs, follow-ups, today ---------- */
+  .nowrap { white-space: nowrap; }
+  .credit { color: var(--success); }
+  .ok-text { color: var(--success); } .warn-text { color: var(--warn); }
+  .stage-bar { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin-bottom: 12px; padding-bottom: 2px; }
+  .stage-bar::-webkit-scrollbar { display: none; }
+  .stage-bar button { background: var(--surface); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 999px; cursor: pointer; font: 500 12.5px inherit; font-family: inherit; white-space: nowrap; }
+  .stage-bar button:hover { color: var(--text); }
+  .stage-bar button.on { background: var(--accent-pressed); border-color: var(--accent); color: #fff; }
+  .stage-bar .n { opacity: .7; margin-left: 3px; font-variant-numeric: tabular-nums; }
+  .chip.stg-request, .chip.stg-inspection { background: transparent; color: var(--text-muted); border-color: var(--border); }
+  .chip.stg-quote_sent { background: rgba(0,180,216,.14); color: var(--accent-bright); border-color: transparent; }
+  .chip.stg-accepted, .chip.stg-disclosure_ack { background: rgba(255,183,3,.13); color: #ffd46b; border-color: transparent; }
+  .chip.stg-in_startup { background: rgba(72,202,228,.2); color: #b9f0fb; border-color: transparent; }
+  .chip.stg-final_complete { background: rgba(6,214,160,.14); color: var(--success); border-color: transparent; }
+  .chip.stg-cancelled { background: transparent; color: var(--text-faint); border-color: var(--border); }
+  .chip.out-signed { background: rgba(6,214,160,.16); color: var(--success); border-color: transparent; }
+  .chip.out-not_now { background: rgba(255,183,3,.13); color: #ffd46b; border-color: transparent; }
+  .chip.out-competitor, .chip.out-diy, .chip.out-other { background: transparent; color: var(--text-muted); border-color: var(--border); }
+  .jgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .jcol { display: grid; gap: 16px; } .jcol .panel + .panel { margin-top: 0; }
+  .phases { display: grid; gap: 2px; background: rgba(0,0,0,.18); border-radius: var(--radius-sm); padding: 8px 12px; font-size: 13px; }
+  .phases > div { display: flex; justify-content: space-between; padding: 3px 0; }
+  .phases > div.past { color: var(--text-faint); }
+  .insp { display: grid; grid-template-columns: minmax(0, 1fr) 120px minmax(0, 1fr); gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 13px; }
+  .insp select, .insp input { padding: 6px 8px; }
+  .mini-list { display: grid; gap: 4px; margin-top: 10px; }
+  .mini { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); background: rgba(0,0,0,.16);
+    border: 1px solid transparent; color: var(--text); font: inherit; font-size: 13px; cursor: pointer; text-align: left; width: 100%; }
+  .mini:hover { border-color: var(--border-strong); text-decoration: none; }
+  .fu-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; background: var(--text-faint); vertical-align: 1px; }
+  .fu-dot.fu-open { background: var(--accent); } .fu-dot.fu-open.late { background: var(--warn); }
+  .fu-dot.fu-done { background: var(--success); } .fu-dot.fu-cancelled, .fu-dot.fu-skipped { background: transparent; border: 1px solid var(--text-faint); }
+  .activity { display: grid; gap: 8px; max-height: 360px; overflow-y: auto; }
+  .act { font-size: 13px; padding-left: 10px; border-left: 2px solid var(--border); }
+  .act.note { border-left-color: var(--brand-orange); }
+  .act .faint { font-size: 11.5px; }
+  .script { white-space: pre-wrap; background: rgba(0,0,0,.22); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 13px; line-height: 1.5; max-height: 220px; overflow-y: auto; }
+  .tgrid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+  .tgrid > div { display: grid; gap: 16px; } .tgrid .panel + .panel { margin-top: 0; }
+  .panel h3 .count { font-size: 12px; background: var(--accent-pressed); color: #fff; padding: 1px 8px; border-radius: 999px; margin-left: 6px; vertical-align: 1px; }
+  .tlist { display: grid; padding: 0 8px 8px; }
+  .trow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px; border-radius: var(--radius-sm); background: none; border: 0;
+    color: var(--text); font: inherit; text-align: left; cursor: pointer; width: 100%; }
+  .trow:hover { background: rgba(255,255,255,.05); }
+  .trow + .trow { border-top: 1px solid rgba(255,255,255,.05); }
+  .tab .badge { background: var(--warn); color: #1b1300; font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 999px; margin-left: 6px; }
+
   @media (max-width: 820px) {
     .settings { grid-template-columns: minmax(0, 1fr); gap: 14px; }
     .savebar { flex-wrap: wrap; }
@@ -200,12 +285,14 @@
     .subnav a { white-space: nowrap; }
     .brand small { display: none; }
     .wrap { padding: 16px 14px 60px; }
-    .g2, .g3, .qgrid { grid-template-columns: 1fr; }
+    .g2, .g3, .qgrid, .jgrid, .tgrid { grid-template-columns: 1fr; }
+    .insp { grid-template-columns: 1fr 110px; } .insp input { grid-column: 1 / -1; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
 <body>
+<div class="water-bg" aria-hidden="true"></div>
 <div id="root"><div class="loading">Loading…</div></div>
 <div id="toasts" aria-live="polite"></div>
 <dialog id="dlg"></dialog>
@@ -311,7 +398,7 @@ function templateTotals(lines, builderId) {
   const rate = Number(S.settings.tax_rate ?? 0.0825);
   let sub = 0, taxBase = 0;
   lines.forEach(l => { const c = lineCalc(l, builderId); sub += c.total; if (c.taxable) taxBase += c.total; });
-  const tax = round2(taxBase * rate);
+  const tax = round2(Math.max(0, taxBase) * rate);
   return { sub: round2(sub), tax, total: round2(sub + tax), rate };
 }
 
@@ -331,6 +418,7 @@ async function loadAll() {
     q(sb.from('su_jobs').select('*'), 'Loading jobs'),
     q(sb.from('su_quotes').select('*').order('updated_at', { ascending: false }), 'Loading quotes'),
   ]);
+  S.followups = await q(sb.from('su_followups').select('*'), 'Loading follow-ups');
   const chk = await sb.from('su_quotes').select('id, options').limit(1);
   S.needsMigration = !!chk.error;
   Object.assign(S, { items, builders, builderPrices: bps, templates: tpls, templateLines: tlines, cadence, customers, jobs, quotes, loaded: true });
@@ -341,7 +429,7 @@ async function loadAll() {
 function route() {
   const hsh = location.hash.startsWith('#/') ? location.hash.slice(2) : '';
   const parts = hsh.split('/').filter(Boolean);
-  return { tab: parts[0] || 'settings', sub: parts[1] || 'items', id: parts[2] || null, parts };
+  return { tab: parts[0] || 'today', sub: parts[1] || 'items', id: parts[2] || null, parts };
 }
 function go(path) {
   if (S.dirty && !confirm('You have unsaved changes. Leave without saving?')) return;
@@ -401,7 +489,7 @@ function renderAuth(mode = 'login', msg = '') {
         if (error) throw error;
         toast('Password saved');
         window.__clearInvite && window.__clearInvite();
-        history.replaceState(null, '', location.pathname + '#/settings/items');
+        history.replaceState(null, '', location.pathname + '#/today');
         await startApp();
       }
     } catch (ex) { err(ex.message || String(ex)); }
@@ -429,7 +517,7 @@ function render() {
   const tabs = [['today','Today'],['jobs','Jobs'],['quotes','Quotes'],['settings','Settings']];
   $('#root').innerHTML = `
     <header class="top">${brandHTML()}
-      <nav class="tabs">${tabs.map(([k, t]) => `<button class="tab${r.tab === k ? ' active' : ''}" data-tab="${k}">${t}</button>`).join('')}</nav>
+      <nav class="tabs">${tabs.map(([k, t]) => `<button class="tab${r.tab === k ? ' active' : ''}" data-tab="${k}">${t}${k === 'today' && todayCounts() ? `<span class="badge">${todayCounts()}</span>` : ''}</button>`).join('')}</nav>
       <div class="top-right menu"><button class="btn btn-sm btn-ghost" id="me-btn" aria-haspopup="true">${h(S.user.email.split('@')[0])} ▾</button>
         <div class="menu-pop" id="me-menu" hidden><div class="who">${h(S.user.email)}</div>
           <button id="me-details">My details</button><button id="me-pw">Change password</button><button id="me-out">Sign out</button></div></div>
@@ -459,14 +547,8 @@ function render() {
   const view = $('#view');
   if (r.tab === 'settings') return renderSettings(view, r);
   if (r.tab === 'quotes') return renderQuotes(view, r);
-  const later = {
-    today: ['Today', 'Follow-ups due, quotes waiting on a disclosure acknowledgment, and start-ups finishing this week will show here.'],
-    jobs: ['Jobs', 'Every start-up by stage, with its timeline and weekly-service outcome, will live here.'],
-  }[r.tab] || ['Not found', ''];
-  view.innerHTML = `<div class="view-head"><h2>${later[0]}</h2></div>
-    <div class="panel empty"><strong>Coming in the next update</strong><p>${later[1]}</p>
-    <button class="btn btn-primary" id="to-quotes">Go to quotes</button></div>`;
-  $('#to-quotes').onclick = () => go('quotes');
+  if (r.tab === 'jobs') return renderJobs(view, r);
+  return renderToday(view);
 }
 
 // =====================================================================
@@ -514,7 +596,7 @@ function editItem(it) {
     body: `<div class="field"><label class="lbl" for="i-name">Name</label><input id="i-name" type="text" value="${h(it.name)}" placeholder="e.g. Week 2 — 2 Visits"></div>
       <div class="field"><label class="lbl" for="i-desc">Description (prints under the name on quotes)</label><textarea id="i-desc" rows="3">${h(it.description)}</textarea></div>
       <div class="g3">
-        <div class="field"><label class="lbl" for="i-price">Standard price</label><input id="i-price" type="text" inputmode="decimal" value="${Number(it.default_price).toFixed(2)}"></div>
+        <div class="field"><label class="lbl" for="i-price">Standard price</label><input id="i-price" type="text" inputmode="decimal" value="${Number(it.default_price).toFixed(2)}"><div class="hint">Negative for a discount or credit, like -50.</div></div>
         <div class="field"><label class="lbl" for="i-phase">Timeline</label><select id="i-phase">${opts(PHASES, it.phase)}</select></div>
         <div class="field"><label class="lbl" for="i-team">Team</label><select id="i-team">${opts(TEAMS, it.team)}</select></div>
       </div>
@@ -534,9 +616,9 @@ function editItem(it) {
           phase: $('#i-phase').value, team: $('#i-team').value, taxable: $('#i-tax').checked, is_note: $('#i-note').checked,
           sort: parseInt($('#i-sort').value, 10) || 0 };
         if (!row.name) return toast('Give the item a name.', true);
-        if (Number.isNaN(price) || price < 0) return toast('Enter a valid price.', true);
+        if (Number.isNaN(price)) return toast('Enter a valid price. Use a negative number for a discount or credit.', true);
         try {
-          if (isNew) S.items.push((await q(sb.from('su_items').insert(row).select().single(), 'Adding item')));
+          if (isNew) S.items.push((await q(sb.from('su_items').insert({ ...row, active: true }).select().single(), 'Adding item')));
           else Object.assign(it, await q(sb.from('su_items').update(row).eq('id', it.id).select().single(), 'Saving item'));
           S.items.sort((a, b) => (a.sort - b.sort) || a.name.localeCompare(b.name));
           d.close(); toast(isNew ? 'Item added' : 'Item saved'); render();
@@ -633,7 +715,7 @@ function viewBuilderEdit(sv, r) {
     const rows = [];
     for (const [item_id, p] of Object.entries(D.prices)) {
       const price = numOrNull(p.price);
-      if (Number.isNaN(price) || (price != null && price < 0)) return toast(`Check the price for ${byId(S.items, item_id)?.name || 'an item'}.`, true);
+      if (Number.isNaN(price)) return toast(`Check the price for ${byId(S.items, item_id)?.name || 'an item'}.`, true);
       if (price != null || p.desc.trim()) rows.push({ item_id, price: price ?? Number(byId(S.items, item_id)?.default_price || 0), description_override: p.desc.trim() || null });
     }
     const row = { name: b.name.trim(), contact_name: b.contact_name?.trim() || null, email: b.email?.trim() || null, phone: b.phone?.trim() || null, notes: b.notes?.trim() || null, active: b.active };
@@ -719,7 +801,7 @@ function viewTemplateEdit(sv, r) {
       const qty = $('[data-qty]', tr); qty && (qty.onchange = () => { l.qty = Math.max(0, Number(qty.value) || 0); markDirty(); draw(); });
       const pr = $('[data-price]', tr); pr && (pr.onchange = () => {
         const v = numOrNull(pr.value);
-        if (Number.isNaN(v) || (v != null && v < 0)) { toast('Enter a valid price, or leave it blank for the standard price.', true); pr.value = l.unit_price == null ? '' : l.unit_price.toFixed(2); return; }
+        if (Number.isNaN(v)) { toast('Enter a valid price, or leave it blank for the standard price.', true); pr.value = l.unit_price == null ? '' : l.unit_price.toFixed(2); return; }
         l.unit_price = v; markDirty(); draw(); });
       $('[data-name]', tr).oninput = e => { l.name = e.target.value; markDirty(); };
       $('[data-descr]', tr).oninput = e => { l.description = e.target.value; markDirty(); };
@@ -867,6 +949,7 @@ function viewGeneral(sv) {
         <label class="check"><input type="checkbox" id="gd-disc"${quoteDefaults().show_disclosure ? ' checked' : ''}> Plaster start-up disclosure</label>
         <label class="check"><input type="checkbox" id="gd-ack"${quoteDefaults().show_ack ? ' checked' : ''}> Acknowledge by text or email instructions</label>
         <label class="check"><input type="checkbox" id="gd-sig"${quoteDefaults().show_signature ? ' checked' : ''}> Signature, date, and printed name block</label>
+        <label class="check"><input type="checkbox" id="gd-savings"${quoteDefaults().show_savings ? ' checked' : ''}> Show savings when prices are discounted</label>
       </div></div>
     <div class="panel panel-pad"><h3>Company details</h3><p class="desc">Printed on the quote header and footer.</p>
       <div class="g2">
@@ -905,7 +988,7 @@ function viewGeneral(sv) {
       disclosure_text: $('#g-disc').value.replace(/\s+$/, ''),
       inspection_checklist: $('#g-check').value.split('\n').map(s => s.trim()).filter(Boolean),
       phase_offsets: offsets,
-      quote_defaults: { show_disclosure: $('#gd-disc').checked, show_ack: $('#gd-ack').checked, show_signature: $('#gd-sig').checked },
+      quote_defaults: { show_disclosure: $('#gd-disc').checked, show_ack: $('#gd-ack').checked, show_signature: $('#gd-sig').checked, show_savings: $('#gd-savings').checked },
     };
     try {
       await q(sb.from('su_settings').upsert(Object.entries(vals).map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }))), 'Saving settings');
@@ -929,7 +1012,7 @@ const fmtShort = d => d ? new Date(String(d).length === 10 ? d + 'T12:00:00' : d
 const newRef = () => { const d = new Date(), p = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}${Math.floor(Math.random() * 90 + 10)}`; };
 const repInfo = () => { const md = S.user?.user_metadata || {}; return { rep_name: md.full_name || S.user.email, rep_email: S.user.email, rep_phone: md.phone || '' }; };
-const quoteDefaults = () => ({ show_disclosure: true, show_ack: true, show_signature: false, ...(S.settings.quote_defaults || {}) });
+const quoteDefaults = () => ({ show_disclosure: true, show_ack: true, show_signature: false, show_savings: true, ...(S.settings.quote_defaults || {}) });
 const fmtQty = n => Number.isInteger(Number(n)) ? String(Number(n)) : String(Number(n));
 const jobOf = qt => byId(S.jobs, qt.job_id);
 const custOf = job => job ? byId(S.customers, job.customer_id) : null;
@@ -956,12 +1039,30 @@ function linesFromTemplate(tplId, builderId) {
   return S.templateLines.filter(l => l.template_id === tplId).sort((a, b) => a.sort - b.sort)
     .map(l => { const it = byId(S.items, l.item_id); return it ? lineFromItem(it, builderId, l) : null; }).filter(Boolean);
 }
-function quoteTotals(lines, rate) {
-  let sub = 0, base = 0;
-  lines.forEach(l => { if (l.is_note) return; const t = round2(Number(l.qty) * Number(l.unit_price)); sub += t; if (l.taxable) base += t; });
-  const tax = round2(base * Number(rate));
-  return { sub: round2(sub), tax, total: round2(sub + tax) };
+function discountAmount(linesSum, disc) {
+  const v = Number(disc?.value);
+  if (!disc || !v || v <= 0 || linesSum <= 0) return 0;
+  const amt = disc.type === 'percent' ? round2(linesSum * v / 100) : round2(v);
+  return Math.min(amt, round2(linesSum));
 }
+// Quote-level discount is applied before tax, spread across taxable and non-taxable lines in proportion.
+function quoteTotals(lines, rate, disc) {
+  let lsum = 0, base = 0, savings = 0;
+  lines.forEach(l => {
+    if (l.is_note) return;
+    const qty = Number(l.qty), unit = Number(l.unit_price), t = round2(qty * unit);
+    lsum += t; if (l.taxable) base += t;
+    if (unit < 0) savings += -t;
+    else if (l.list_price != null && Number(l.list_price) > unit) savings += round2((Number(l.list_price) - unit) * qty);
+  });
+  lsum = round2(lsum);
+  const d = discountAmount(lsum, disc);
+  const baseAfter = Math.max(0, base - (lsum > 0 ? d * (base / lsum) : 0));
+  const tax = round2(baseAfter * Number(rate));
+  const sub = round2(lsum - d);
+  return { lines: lsum, discount: d, sub, tax, total: round2(sub + tax), savings: round2(savings + d) };
+}
+const discountLabel = disc => `${disc?.label || 'Discount'}${disc?.type === 'percent' ? ` (${Number(disc.value)}%)` : ''}`;
 const templatesFor = builderId => S.templates.filter(t => t.active && (!t.builder_id || t.builder_id === builderId))
   .sort((a, b) => (!!b.builder_id - !!a.builder_id) || (a.sort - b.sort));
 
@@ -1072,7 +1173,7 @@ function newQuoteDialog(preset = {}) {
           }
           if (!job) {
             const prev = S.jobs.find(j => j.customer_id === customer.id);
-            job = await q(sb.from('su_jobs').insert({ customer_id: customer.id, owner_id: S.user.id, notice_date: todayISO(),
+            job = await q(sb.from('su_jobs').insert({ customer_id: customer.id, owner_id: S.user.id, notice_date: todayISO(), stage: 'request', join_phase: 'prep', service_outcome: 'pending',
               builder_id: mode === 'new' ? ($('#nq-builder').value || null) : (prev?.builder_id || null),
               pool_type: mode === 'new' ? $('#nq-type').value : (prev?.pool_type || 'new_build'),
               bill_to: mode === 'new' ? $('#nq-bill').value : (prev?.bill_to || 'homeowner') }).select().single(), 'Creating job');
@@ -1090,11 +1191,11 @@ function newQuoteDialog(preset = {}) {
 
 async function createQuote(job, customer, { lines, template, fromQuote }) {
   const rate = fromQuote ? Number(fromQuote.tax_rate) : Number(S.settings.tax_rate ?? 0.0825);
-  const tot = quoteTotals(lines, rate);
   const version = Math.max(0, ...S.quotes.filter(x => x.job_id === job.id).map(x => x.version || 1)) + 1;
   const title = fromQuote ? fromQuote.title : `${customer.address || custName(customer)} — Pool Start-Up Quote`;
   const options = fromQuote ? { ...fromQuote.options, ...repInfo() }
     : { ...quoteDefaults(), join_phase: template?.join_phase || 'prep', ...repInfo() };
+  const tot = quoteTotals(lines, rate, options.discount);
   const row = { job_id: job.id, ref: newRef(), title, version, status: 'draft', template_id: template?.id || fromQuote?.template_id || null,
     tax_rate: rate, subtotal: tot.sub, tax: tot.tax, total: tot.total, comments: fromQuote?.comments || null,
     disclosure_text: S.settings.disclosure_text || '', expires_on: addDays(todayISO(), Number(S.settings.quote_expiry_days || 30)),
@@ -1126,7 +1227,7 @@ async function viewQuoteEdit(view, id) {
   const dis = editable ? '' : ' disabled';
 
   const drawLines = () => {
-    const tot = quoteTotals(D.lines, Q.tax_rate);
+    const tot = quoteTotals(D.lines, Q.tax_rate, Q.options.discount);
     $('#q-lines').innerHTML = D.lines.length ? D.lines.map((l, i) => {
       const over = !l.is_note && l.list_price != null && Number(l.unit_price) !== Number(l.list_price);
       return `<tr data-i="${i}">${editable ? `<td class="drag"><button class="icon-btn" data-up ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button><button class="icon-btn" data-down ${i === D.lines.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button></td>` : ''}
@@ -1135,12 +1236,16 @@ async function viewQuoteEdit(view, id) {
         <td class="w-qty">${l.is_note ? '' : editable ? `<input type="number" min="0" step="1" data-qty value="${fmtQty(l.qty)}" aria-label="Quantity">` : fmtQty(l.qty)}</td>
         <td class="w-price right">${l.is_note ? '<span class="faint">—</span>' : editable ? `<input type="text" inputmode="decimal" class="right${over ? ' override' : ''}" data-price value="${Number(l.unit_price).toFixed(2)}" aria-label="Unit price">` : money(l.unit_price)}
           ${over ? `<div class="hint override">List ${money(l.list_price)}</div>` : ''}</td>
-        <td class="right num">${l.is_note ? '' : money(l.qty * l.unit_price)}</td>
+        <td class="right num${Number(l.unit_price) < 0 ? ' credit' : ''}">${l.is_note ? '' : money(l.qty * l.unit_price)}</td>
         ${editable ? `<td style="white-space:nowrap"><button class="icon-btn" data-edit title="Edit line" aria-label="Edit line">✎</button><button class="icon-btn" data-rm title="Remove line" aria-label="Remove line">✕</button></td>` : ''}</tr>`;
     }).join('') : `<tr><td colspan="6"><div class="empty" style="padding:20px"><strong>No lines yet</strong><p style="margin:0">Apply a template or add items below.</p></div></td></tr>`;
-    $('#q-totals').innerHTML = `<span class="muted">Subtotal</span><span class="right num">${money(tot.sub)}</span>
+    const disc = Q.options.discount;
+    $('#q-totals').innerHTML = `<span class="muted">Subtotal</span><span class="right num">${money(tot.lines)}</span>
+      ${tot.discount ? `<span class="muted">${h(discountLabel(disc))}</span><span class="right num credit">−${money(tot.discount)}</span>` : ''}
       <span class="muted">Tax (${(Number(Q.tax_rate) * 100).toFixed(3).replace(/\.?0+$/, '')}%)</span><span class="right num">${money(tot.tax)}</span>
-      <span class="t">Total</span><span class="right num t">${money(tot.total)}</span>`;
+      <span class="t">Total</span><span class="right num t">${money(tot.total)}</span>
+      ${tot.savings > 0 ? `<span class="faint" style="font-size:12px">Customer saves</span><span class="right num credit" style="font-size:12px">${money(tot.savings)}</span>` : ''}`;
+    const db = $('#q-disc'); if (db) db.textContent = disc && Number(disc.value) ? 'Edit discount' : 'Add discount';
     if (!editable) return;
     $$('#q-lines tr[data-i]').forEach(tr => {
       const i = +tr.dataset.i, l = D.lines[i];
@@ -1150,7 +1255,7 @@ async function viewQuoteEdit(view, id) {
       $('[data-edit]', tr).onclick = () => editLine(l, nl => { D.lines[i] = nl; markDirty(); drawLines(); });
       const qy = $('[data-qty]', tr); qy && (qy.onchange = () => { l.qty = Math.max(0, Number(qy.value) || 0); markDirty(); drawLines(); });
       const pr = $('[data-price]', tr); pr && (pr.onchange = () => { const v = numOrNull(pr.value);
-        if (v == null || Number.isNaN(v) || v < 0) { toast('Enter a valid price.', true); pr.value = Number(l.unit_price).toFixed(2); return; }
+        if (v == null || Number.isNaN(v)) { toast('Enter a valid price.', true); pr.value = Number(l.unit_price).toFixed(2); return; }
         l.unit_price = v; markDirty(); drawLines(); });
     });
   };
@@ -1160,7 +1265,7 @@ async function viewQuoteEdit(view, id) {
       <div class="sub">#${h(Q.ref)}${Q.version > 1 ? `, version ${Q.version}` : ''}. Created ${fmtShort(Q.created_at)}${Q.sent_at ? `, sent ${fmtShort(Q.sent_at)}` : ''}${Q.accepted_at ? `, accepted ${fmtShort(Q.accepted_at)}` : ''}.</div></div>
     ${editable ? '' : `<div class="notice">This quote has been ${Q.status === 'superseded' ? 'replaced by a newer version' : Q.status}, so it’s locked to match what the customer received. Use <b>New version</b> to make changes.</div>`}
     <div class="qgrid">
-      <div class="panel panel-pad"><div class="row" style="justify-content:space-between;align-items:flex-start"><h3>Customer</h3><button class="btn btn-sm" id="edit-cust">Edit</button></div>
+      <div class="panel panel-pad"><div class="row" style="justify-content:space-between;align-items:flex-start"><h3>Customer</h3><div class="row" style="gap:6px"><a class="btn btn-sm" href="#/jobs/${job?.id}">Open job</a><button class="btn btn-sm" id="edit-cust">Edit</button></div></div>
         <div class="kv"><div>${h(custName(cust))}</div><div class="muted">${h(custAddr(cust)) || '<span class="faint">No address</span>'}</div>
           <div class="muted">${[cust?.email, cust?.phone].filter(Boolean).map(h).join('<br>') || '<span class="faint">No contact info</span>'}</div></div>
         <div class="kv2"><span class="faint">Builder</span><span>${builder ? h(builder.name) : '—'}</span>
@@ -1183,7 +1288,7 @@ async function viewQuoteEdit(view, id) {
       <div class="tbl-wrap"><table class="tbl editor-lines"><thead><tr>${editable ? '<th></th>' : ''}<th>Line</th><th>Qty</th><th class="right">Unit price</th><th class="right">Total</th>${editable ? '<th></th>' : ''}</tr></thead><tbody id="q-lines"></tbody></table></div>
       ${editable ? `<div class="panel-pad row" style="border-top:1px solid var(--border)">
         <select id="q-add" style="max-width:380px"><option value="">Add a line item…</option>${S.items.filter(i => i.active).map(i => `<option value="${i.id}">${h(i.name)}${i.is_note ? ' (note)' : ` — ${money(resolvedPrice(i.id, job?.builder_id))}`}</option>`).join('')}</select>
-        <button class="btn btn-sm" id="q-custom">Custom line</button></div>` : ''}
+        <button class="btn btn-sm" id="q-custom">Custom line</button><button class="btn btn-sm" id="q-disc">Add discount</button></div>` : ''}
       <div class="totals" id="q-totals"></div>
     </div>
     <div class="panel panel-pad"><h3>What prints on the PDF</h3><p class="desc">Defaults come from Settings → Quote & disclosure.</p>
@@ -1191,6 +1296,7 @@ async function viewQuoteEdit(view, id) {
         <label class="check"><input type="checkbox" id="o-disc"${O.show_disclosure ? ' checked' : ''}${dis}> Plaster start-up disclosure</label>
         <label class="check"><input type="checkbox" id="o-ack"${O.show_ack ? ' checked' : ''}${dis}> Acknowledge by text or email instructions</label>
         <label class="check"><input type="checkbox" id="o-sig"${O.show_signature ? ' checked' : ''}${dis}> Signature, date, and printed name block</label>
+        <label class="check"><input type="checkbox" id="o-savings"${O.show_savings ? ' checked' : ''}${dis}> Show savings (original prices crossed out and “You save”)</label>
       </div></div>
     <div class="savebar"><span class="dirty" id="dirty-flag"${S.dirty ? '' : ' hidden'}>Unsaved changes</span>
       ${Q.status === 'draft' ? '<button class="btn btn-ghost btn-danger" id="q-del">Delete draft</button>' : ''}
@@ -1211,6 +1317,7 @@ async function viewQuoteEdit(view, id) {
     $('#o-disc').onchange = e => { O.show_disclosure = e.target.checked; markDirty(); };
     $('#o-ack').onchange = e => { O.show_ack = e.target.checked; markDirty(); };
     $('#o-sig').onchange = e => { O.show_signature = e.target.checked; markDirty(); };
+    $('#o-savings').onchange = e => { O.show_savings = e.target.checked; markDirty(); };
     $('#q-tpl').onchange = async e => {
       const t = byId(S.templates, e.target.value); e.target.value = ''; if (!t) return;
       if (D.lines.length && !(await confirmDialog('Replace lines', `Replace the ${D.lines.length} current line${D.lines.length > 1 ? 's' : ''} with “${h(t.name)}”?`, 'Replace lines', false))) return;
@@ -1218,11 +1325,12 @@ async function viewQuoteEdit(view, id) {
     };
     $('#q-add').onchange = e => { const it = byId(S.items, e.target.value); e.target.value = ''; if (!it) return; D.lines.push(lineFromItem(it, job?.builder_id)); markDirty(); drawLines(); };
     $('#q-custom').onclick = () => editLine(null, nl => { D.lines.push(nl); markDirty(); drawLines(); });
+    $('#q-disc').onclick = () => discountDialog(O.discount, quoteTotals(D.lines, Q.tax_rate).lines, dsc => { if (dsc) O.discount = dsc; else delete O.discount; markDirty(); drawLines(); });
   }
 
   const save = async () => {
     if (!Q.title.trim()) { toast('Give the quote a title.', true); return false; }
-    const tot = quoteTotals(D.lines, Q.tax_rate);
+    const tot = quoteTotals(D.lines, Q.tax_rate, O.discount);
     const row = { title: Q.title.trim(), expires_on: Q.expires_on || null, comments: Q.comments?.trim() || null, template_id: Q.template_id || null,
       options: { ...O, ...repInfo() }, subtotal: tot.sub, tax: tot.tax, total: tot.total, disclosure_text: S.settings.disclosure_text || '' };
     try {
@@ -1282,12 +1390,38 @@ async function viewQuoteEdit(view, id) {
   $('#q-tpl-save').onclick = () => saveQuoteAsTemplate(D.lines, job, Q);
 }
 
+function discountDialog(cur, linesSum, onSave) {
+  const d0 = cur || { label: 'Discount', type: 'percent', value: '' };
+  openDialog({
+    title: cur ? 'Edit discount' : 'Add discount',
+    body: `<p class="desc" style="margin:0 0 12px">Taken off the whole quote before tax. To discount one line instead, change its price.</p>
+      <div class="field"><label class="lbl" for="ds-label">Label on the quote</label><input id="ds-label" type="text" value="${h(d0.label)}" placeholder="e.g. Builder partner discount"></div>
+      <div class="g2"><div class="field"><label class="lbl" for="ds-type">Type</label><select id="ds-type">${opts([['percent','Percent off'],['amount','Dollar amount off']], d0.type)}</select></div>
+        <div class="field"><label class="lbl" for="ds-val">Amount</label><input id="ds-val" type="text" inputmode="decimal" value="${h(d0.value)}" placeholder="${d0.type === 'percent' ? '10' : '100.00'}"></div></div>
+      <div class="hint" id="ds-prev"></div>`,
+    foot: `${cur ? '<div class="left"><button class="btn btn-sm btn-ghost btn-danger" id="ds-rm">Remove discount</button></div>' : ''}<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="ds-ok">${cur ? 'Save discount' : 'Add discount'}</button>`,
+    onMount: d => {
+      const prev = () => { const v = numOrNull($('#ds-val').value), t = $('#ds-type').value;
+        $('#ds-val').placeholder = t === 'percent' ? '10' : '100.00';
+        $('#ds-prev').textContent = v > 0 ? `Takes ${money(discountAmount(linesSum, { type: t, value: v }))} off the ${money(linesSum)} subtotal.` : ''; };
+      $('#ds-val').oninput = prev; $('#ds-type').onchange = prev; prev();
+      $('#ds-ok').onclick = () => {
+        const v = numOrNull($('#ds-val').value), t = $('#ds-type').value;
+        if (v == null || Number.isNaN(v) || v <= 0) return toast('Enter an amount greater than 0.', true);
+        if (t === 'percent' && v > 100) return toast('A percent discount can’t be more than 100%.', true);
+        d.close(); onSave({ label: $('#ds-label').value.trim() || 'Discount', type: t, value: v });
+      };
+      $('#ds-rm') && ($('#ds-rm').onclick = () => { d.close(); onSave(null); });
+    }
+  });
+}
+
 function editLine(line, onSave) {
   const isNew = !line;
   const l = line ? { ...line } : { item_id: null, name: '', description: '', qty: 1, unit_price: 0, list_price: null, taxable: true, team: 'none', phase: 'none', is_note: false };
   openDialog({
     title: isNew ? 'Custom line' : 'Edit line',
-    body: `${isNew ? '<p class="desc" style="margin:0 0 12px">A one-off line for this quote only. To reuse it, add it under Settings → Line items.</p>' : ''}
+    body: `${isNew ? '<p class="desc" style="margin:0 0 12px">A one-off line for this quote only. Use a negative price for a credit. To reuse it, add it under Settings → Line items.</p>' : ''}
       <div class="field"><label class="lbl" for="l-name">Name</label><input id="l-name" type="text" value="${h(l.name)}"></div>
       <div class="field"><label class="lbl" for="l-desc">Description</label><textarea id="l-desc" rows="3">${h(l.description || '')}</textarea></div>
       <div class="g2"><div class="field"><label class="lbl" for="l-qty">Quantity</label><input id="l-qty" type="number" min="0" step="1" value="${fmtQty(l.qty)}"></div>
@@ -1305,7 +1439,7 @@ function editLine(line, onSave) {
       nl.taxable = $('#l-tax').checked && !nl.is_note;
       if (nl.is_note) nl.unit_price = 0;
       if (!nl.name) return toast('Give the line a name.', true);
-      if (Number.isNaN(price) || price < 0) return toast('Enter a valid price.', true);
+      if (Number.isNaN(price)) return toast('Enter a valid price.', true);
       d.close(); onSave(nl);
     }
   });
@@ -1413,9 +1547,9 @@ function disclosureBlocks(text, C) {
 }
 
 function buildQuotePdf(Q, lines, job, cust, builder, logo) {
-  const C = { blue: '#1676B7', orange: '#F39A2B', ink: '#1E2B38', mute: '#5E6E7E', rule: '#DCE3EA', tint: '#F1F6FA' };
+  const C = { blue: '#1676B7', orange: '#F39A2B', ink: '#1E2B38', mute: '#5E6E7E', rule: '#DCE3EA', tint: '#F1F6FA', green: '#1E8C5A' };
   const co = S.settings.company || {}, O = { ...quoteDefaults(), ...(Q.options || {}) };
-  const tot = quoteTotals(lines, Q.tax_rate);
+  const tot = quoteTotals(lines, Q.tax_rate, O.discount);
   const W = 516;
   const coLine = [co.address, [co.city, [co.state, co.zip].filter(Boolean).join(' ')].filter(Boolean).join(', ')].filter(Boolean).join(', ');
   const partyBlock = (heading, rows) => ({ stack: [{ text: heading, style: 'label' }, ...rows.filter(Boolean).map((r, i) => ({ text: r, bold: i === 0, margin: [0, i === 0 ? 2 : 1, 0, 0] }))] });
@@ -1441,11 +1575,18 @@ function buildQuotePdf(Q, lines, job, cust, builder, logo) {
     body.push([
       { stack: [{ text: l.name, bold: true }, l.description ? { text: l.description, color: C.mute, fontSize: 8.5, margin: [0, 2, 0, 0] } : ''] },
       { text: fmtQty(l.qty), alignment: 'center' },
-      { text: money(l.unit_price), alignment: 'right' },
-      { text: money(l.qty * l.unit_price), alignment: 'right' + '' },
+      (O.show_savings && l.list_price != null && Number(l.list_price) > Number(l.unit_price) && Number(l.unit_price) >= 0)
+        ? { stack: [{ text: money(l.list_price), decoration: 'lineThrough', color: C.mute, fontSize: 8 }, { text: money(l.unit_price), color: C.green }], alignment: 'right' }
+        : { text: money(l.unit_price), alignment: 'right', color: Number(l.unit_price) < 0 ? C.green : C.ink },
+      { text: money(l.qty * l.unit_price), alignment: 'right', color: Number(l.unit_price) < 0 ? C.green : C.ink },
     ]);
   });
 
+  const totRows = [[{ text: 'Subtotal', color: C.mute }, { text: money(tot.lines), alignment: 'right' }]];
+  if (tot.discount) totRows.push([{ text: discountLabel(O.discount), color: C.green }, { text: '−' + money(tot.discount), alignment: 'right', color: C.green }]);
+  totRows.push([{ text: `Tax (${(Number(Q.tax_rate) * 100).toFixed(3).replace(/\.?0+$/, '')}%)`, color: C.mute }, { text: money(tot.tax), alignment: 'right' }]);
+  const totalIdx = totRows.length;
+  totRows.push([{ text: 'Total', bold: true, fontSize: 12, color: C.blue, margin: [0, 3, 0, 0] }, { text: money(tot.total), bold: true, fontSize: 12, alignment: 'right', color: C.blue, margin: [0, 3, 0, 0] }]);
   const content = [
     { columns: [
         logo ? { image: logo, width: 118 } : { text: co.name || 'Poolie', fontSize: 22, bold: true, color: C.blue },
@@ -1462,11 +1603,9 @@ function buildQuotePdf(Q, lines, job, cust, builder, logo) {
       layout: { hLineWidth: (i, n) => (i === 1 ? 1.2 : (i === 0 || i === n.table.body.length) ? 0 : 0.5),
         hLineColor: i => (i === 1 ? C.blue : C.rule), vLineWidth: () => 0,
         paddingTop: i => (i === 0 ? 0 : 7), paddingBottom: i => (i === 0 ? 5 : 7), paddingLeft: () => 4, paddingRight: () => 4 } },
-    { columns: [{ width: '*', text: '' }, { width: 220, margin: [0, 10, 0, 0], table: { widths: ['*', 80], body: [
-        [{ text: 'Subtotal', color: C.mute }, { text: money(tot.sub), alignment: 'right' }],
-        [{ text: `Tax (${(Number(Q.tax_rate) * 100).toFixed(3).replace(/\.?0+$/, '')}%)`, color: C.mute }, { text: money(tot.tax), alignment: 'right' }],
-        [{ text: 'Total', bold: true, fontSize: 12, color: C.blue, margin: [0, 3, 0, 0] }, { text: money(tot.total), bold: true, fontSize: 12, alignment: 'right', color: C.blue, margin: [0, 3, 0, 0] }] ] },
-      layout: { hLineWidth: i => (i === 2 ? 1 : 0), hLineColor: () => C.rule, vLineWidth: () => 0, paddingTop: () => 3, paddingBottom: () => 3, paddingLeft: () => 0, paddingRight: () => 4 } }] },
+    { columns: [{ width: '*', text: '' }, { width: 230, margin: [0, 10, 0, 0], table: { widths: ['*', 80], body: totRows },
+      layout: { hLineWidth: i => (i === totalIdx ? 1 : 0), hLineColor: () => C.rule, vLineWidth: () => 0, paddingTop: () => 3, paddingBottom: () => 3, paddingLeft: () => 0, paddingRight: () => 4 } }] },
+    (O.show_savings && tot.savings > 0) ? { text: `You save ${money(tot.savings)}`, alignment: 'right', color: C.green, bold: true, margin: [0, 4, 4, 0] } : '',
   ];
 
   if (O.show_disclosure && (Q.disclosure_text || S.settings.disclosure_text)) {
@@ -1532,6 +1671,437 @@ function myDetailsDialog() {
       d.close(); toast('Details saved'); render();
     }
   });
+}
+
+// =====================================================================
+// JOBS (phase 3) + FOLLOW-UPS & TODAY (phase 4)
+// =====================================================================
+const STAGE_LABELS = [['request','New request'],['inspection','Pre-start inspection'],['quote_sent','Quote sent'],['accepted','Accepted'],
+  ['disclosure_ack','Disclosure acknowledged'],['in_startup','In start-up'],['final_complete','Complete'],['cancelled','Cancelled']];
+const OUTCOMES = [['pending','Pending'],['signed','Signed service'],['not_now','Not now'],['competitor','Competitor'],['diy','DIY'],['other','Other']];
+const CLOSED_OUTCOMES = ['signed','competitor','diy'];
+const CHANNELS = [['call','Call'],['text','Text'],['email','Email'],['in_person','In person'],['other','Other']];
+const stageChip = s => `<span class="chip stg-${s}">${h(label(STAGE_LABELS, s))}</span>`;
+const outcomeChip = o => o === 'pending' ? '<span class="faint">Pending</span>' : `<span class="chip out-${o}">${h(label(OUTCOMES, o))}</span>`;
+const diffDays = (a, b) => Math.round((new Date(a + 'T12:00:00') - new Date(b + 'T12:00:00')) / 86400000);
+const fmtDay = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : '';
+const fmtDow = d => d ? new Date(d + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '';
+const phaseOffsets = () => ({ prep: 0, week1: 1, week2: 7, week3: 14, week4: 21, final: 28, ...(S.settings.phase_offsets || {}) });
+const acceptedQuote = job => S.quotes.filter(x => x.job_id === job.id && x.status === 'accepted').sort((a, b) => b.version - a.version)[0];
+const latestQuote = job => S.quotes.filter(x => x.job_id === job.id && x.status !== 'superseded').sort((a, b) => b.version - a.version)[0];
+const jobTitle = job => { const c = custOf(job); return c?.address || custName(c); };
+const telHref = p => 'tel:' + String(p || '').replace(/[^\d+]/g, '');
+const smsHref = (p, body) => 'sms:' + String(p || '').replace(/[^\d+]/g, '') + '?&body=' + encodeURIComponent(body || '');
+
+function computedFinal(job) {
+  if (!job.start_date) return null;
+  const o = phaseOffsets(); return addDays(job.start_date, (o.final ?? 28) - (o[job.join_phase] ?? 0));
+}
+function relDays(d) {
+  if (!d) return '';
+  const n = diffDays(d, todayISO());
+  return n === 0 ? 'today' : n === 1 ? 'tomorrow' : n === -1 ? 'yesterday' : n > 0 ? `in ${n} days` : `${-n} days ago`;
+}
+function fillScript(text, job) {
+  const c = custOf(job), b = job && byId(S.builders, job.builder_id), md = S.user.user_metadata || {};
+  const map = { first_name: c?.first_name || 'there', last_name: c?.last_name || '', rep_name: (md.full_name || '').split(' ')[0] || md.full_name || 'the Poolie team',
+    final_day: job?.final_date ? fmtDay(job.final_date) : '[final visit day]', address: c?.address || 'your pool', builder: b?.name || 'your builder' };
+  return String(text || '').replace(/\{(\w+)\}/g, (m, k) => (k in map ? map[k] : m));
+}
+
+// ---------- follow-up engine ----------
+async function syncFollowups(job) {
+  const mine = S.followups.filter(f => f.job_id === job.id);
+  const closed = CLOSED_OUTCOMES.includes(job.service_outcome) || job.stage === 'cancelled';
+  if (closed) return cancelOpenFollowups(job);
+  if (!job.final_date) return;
+  const inserts = [];
+  for (const step of S.cadence.filter(c => c.active)) {
+    const due = addDays(job.final_date, step.offset_days);
+    const f = mine.find(x => x.step_id === step.id);
+    if (!f) inserts.push({ job_id: job.id, step_id: step.id, label: step.label, due_date: due, status: 'open' });
+    else if (f.status === 'open' && f.due_date !== due) {
+      try { Object.assign(f, await q(sb.from('su_followups').update({ due_date: due, label: step.label }).eq('id', f.id).select().single(), 'Rescheduling follow-up')); } catch (_) {}
+    }
+  }
+  if (inserts.length) { try { S.followups.push(...await q(sb.from('su_followups').insert(inserts).select(), 'Creating follow-ups')); } catch (_) {} }
+}
+async function cancelOpenFollowups(job) {
+  const open = S.followups.filter(f => f.job_id === job.id && f.status === 'open');
+  if (!open.length) return;
+  try { await q(sb.from('su_followups').update({ status: 'cancelled' }).eq('job_id', job.id).eq('status', 'open'), 'Closing follow-ups'); open.forEach(f => f.status = 'cancelled'); } catch (_) {}
+}
+async function setOutcome(job, outcome, note) {
+  try {
+    Object.assign(job, await q(sb.from('su_jobs').update({ service_outcome: outcome, service_outcome_note: note || null, service_outcome_at: outcome === 'pending' ? null : new Date().toISOString() }).eq('id', job.id).select().single(), 'Saving outcome'));
+  } catch (_) { return false; }
+  logActivity(job.id, 'outcome', `Weekly service: ${label(OUTCOMES, outcome)}${note ? ` (${note})` : ''}`);
+  if (CLOSED_OUTCOMES.includes(outcome)) await cancelOpenFollowups(job);
+  else await syncFollowups(job);
+  return true;
+}
+
+function followupDialog(f, after) {
+  const job = byId(S.jobs, f.job_id), c = custOf(job), step = byId(S.cadence, f.step_id);
+  const script = fillScript(step?.script || '', job);
+  const done = f.status !== 'open';
+  openDialog({
+    title: `${f.label}: ${jobTitle(job)}`,
+    body: `<div class="kv" style="margin-top:0"><div>${h(custName(c))}</div><div class="muted">${h(custAddr(c))}</div>
+        <div class="muted">Due ${fmtDow(f.due_date)} (${relDays(f.due_date)}). Final visit ${job.final_date ? fmtDow(job.final_date) : 'not set'}.</div></div>
+      <div class="row" style="margin-bottom:12px">
+        ${c?.phone ? `<a class="btn btn-sm" href="${telHref(c.phone)}">Call ${h(c.phone)}</a><a class="btn btn-sm" href="${smsHref(c.phone, script)}">Text</a>` : '<span class="faint" style="font-size:12px">No phone on file.</span>'}
+        ${c?.email ? `<a class="btn btn-sm" href="mailto:${h(c.email)}?subject=${encodeURIComponent('Weekly pool service')}&body=${encodeURIComponent(script)}">Email</a>` : ''}
+        ${script ? '<button class="btn btn-sm" id="fu-copy">Copy script</button>' : ''}</div>
+      ${script ? `<div class="script">${h(script)}</div>` : ''}
+      ${done ? `<div class="notice" style="margin:12px 0 0">Logged ${f.done_at ? fmtShort(f.done_at) : ''}: ${h(label(CHANNELS, f.channel) || f.status)}${f.reached === true ? ', got through' : f.reached === false ? ', no response' : ''}${f.result ? `. ${h(f.result)}` : ''}</div>` : `
+      <h3 style="margin:16px 0 8px;font-size:14px">Log this follow-up</h3>
+      <div class="g2"><div class="field"><label class="lbl" for="fu-ch">How</label><select id="fu-ch">${opts(CHANNELS, 'text')}</select></div>
+        <div class="field"><label class="lbl" for="fu-r">Result</label><select id="fu-r">${opts([['yes','Got through'],['no','No response']], 'yes')}</select></div></div>
+      <div class="field"><label class="lbl" for="fu-note">Notes (optional)</label><textarea id="fu-note" rows="2" placeholder="What they said, next steps…"></textarea></div>
+      <div class="g2"><div class="field"><label class="lbl" for="fu-out">Weekly service outcome</label><select id="fu-out">${opts([['', 'No change (' + label(OUTCOMES, job.service_outcome) + ')'], ...OUTCOMES.filter(o => o[0] !== 'pending')], '')}</select></div>
+        <div class="field" id="fu-other" hidden><label class="lbl" for="fu-other-t">Describe</label><input id="fu-other-t" type="text" placeholder="e.g. Moving, builder handles it"></div></div>
+      <label class="check" id="fu-keep-wrap" hidden><input type="checkbox" id="fu-keep" checked> Keep the remaining follow-ups scheduled</label>
+      <div class="hint" id="fu-out-hint"></div>`}`,
+    foot: done ? `<button class="btn" data-close>Close</button>${f.status !== 'cancelled' ? '<button class="btn" id="fu-reopen">Reopen</button>' : ''}`
+      : `<div class="left"><button class="btn btn-sm btn-ghost" id="fu-skip">Skip</button></div><button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="fu-save">Log follow-up</button>`,
+    onMount: d => {
+      $('#fu-copy') && ($('#fu-copy').onclick = async () => { try { await navigator.clipboard.writeText(script); toast('Script copied'); } catch (_) { toast('Couldn’t copy. Select the text and copy it instead.', true); } });
+      $('#fu-reopen') && ($('#fu-reopen').onclick = async () => {
+        try { Object.assign(f, await q(sb.from('su_followups').update({ status: 'open', done_at: null }).eq('id', f.id).select().single(), 'Reopening')); d.close(); toast('Follow-up reopened'); after && after(); } catch (_) {}
+      });
+      if (done) return;
+      const outSel = $('#fu-out');
+      outSel.onchange = () => {
+        const v = outSel.value;
+        $('#fu-other').hidden = v !== 'other'; $('#fu-keep-wrap').hidden = v !== 'other';
+        $('#fu-out-hint').textContent = CLOSED_OUTCOMES.includes(v) ? 'Remaining follow-ups for this job will be closed.' : v === 'not_now' ? 'Remaining follow-ups stay scheduled.' : '';
+      };
+      $('#fu-skip').onclick = async () => {
+        try { Object.assign(f, await q(sb.from('su_followups').update({ status: 'skipped', done_at: new Date().toISOString(), done_by: S.user.id }).eq('id', f.id).select().single(), 'Skipping'));
+          logActivity(job.id, 'followup_skipped', `Skipped follow-up: ${f.label}`); d.close(); toast('Follow-up skipped'); after && after(); } catch (_) {}
+      };
+      $('#fu-save').onclick = async () => {
+        const outcome = outSel.value, reached = $('#fu-r').value === 'yes', note = $('#fu-note').value.trim();
+        const otherTxt = $('#fu-other-t').value.trim();
+        if (outcome === 'other' && !otherTxt) return toast('Describe the outcome.', true);
+        try {
+          Object.assign(f, await q(sb.from('su_followups').update({ status: 'done', channel: $('#fu-ch').value, reached, result: note || null,
+            outcome_set: outcome || null, done_at: new Date().toISOString(), done_by: S.user.id }).eq('id', f.id).select().single(), 'Logging follow-up'));
+          logActivity(job.id, 'followup_logged', `${f.label}: ${label(CHANNELS, f.channel)}, ${reached ? 'got through' : 'no response'}${note ? `. ${note}` : ''}`, { followup_id: f.id });
+          if (outcome) {
+            await setOutcome(job, outcome, outcome === 'other' ? otherTxt : note);
+            if (outcome === 'other' && !$('#fu-keep').checked) await cancelOpenFollowups(job);
+          }
+          d.close(); toast(outcome === 'signed' ? 'Signed for weekly service' : 'Follow-up logged'); after && after();
+        } catch (_) {}
+      };
+    }
+  });
+}
+
+// ---------- jobs list ----------
+function renderJobs(view, r) {
+  if (r.parts[1]) return viewJob(view, r.parts[1]);
+  const st = S.jFilter || 'active', term = (S.jSearch || '').toLowerCase(), bf = S.jBuilder || '';
+  const counts = Object.fromEntries(STAGE_LABELS.map(([k]) => [k, S.jobs.filter(j => j.stage === k).length]));
+  const rows = S.jobs.filter(j => {
+    if (st === 'active' && ['final_complete','cancelled'].includes(j.stage)) return false;
+    if (!['active','all'].includes(st) && j.stage !== st) return false;
+    if (bf && j.builder_id !== bf) return false;
+    if (!term) return true;
+    const c = custOf(j), b = byId(S.builders, j.builder_id);
+    return [custName(c), custAddr(c), c?.email, c?.phone, b?.name].join(' ').toLowerCase().includes(term);
+  }).sort((a, b) => (STAGES.indexOf(a.stage) - STAGES.indexOf(b.stage)) || String(a.final_date || a.start_date || '9').localeCompare(String(b.final_date || b.start_date || '9')));
+  const nextFu = j => S.followups.filter(f => f.job_id === j.id && f.status === 'open').sort((a, b) => a.due_date.localeCompare(b.due_date))[0];
+  view.innerHTML = `<div class="view-head"><h2>Jobs</h2><div class="grow"></div><button class="btn" id="new-job">New job</button><button class="btn btn-primary" id="new-q2">New quote</button></div>
+    <div class="stage-bar">${[['active','Active', S.jobs.filter(j => !['final_complete','cancelled'].includes(j.stage)).length], ...STAGE_LABELS.map(([k, t]) => [k, t, counts[k]]), ['all','All', S.jobs.length]]
+      .map(([k, t, n]) => `<button data-st="${k}" class="${st === k ? 'on' : ''}">${h(t)} <span class="n">${n}</span></button>`).join('')}</div>
+    <div class="row" style="margin-bottom:12px">
+      <input type="text" id="j-search" placeholder="Search name, address, or builder" value="${h(S.jSearch || '')}" style="max-width:320px">
+      ${S.builders.length ? `<select id="j-builder" style="max-width:220px"><option value="">All builders</option>${S.builders.map(b => `<option value="${b.id}"${bf === b.id ? ' selected' : ''}>${h(b.name)}</option>`).join('')}</select>` : ''}</div>
+    <div class="panel tbl-wrap">${rows.length ? `<table class="tbl"><thead><tr><th>Pool</th><th>Builder</th><th>Stage</th><th>Start</th><th>Final visit</th><th>Disclosure</th><th>Weekly service</th><th>Next follow-up</th></tr></thead><tbody>
+      ${rows.map(j => { const c = custOf(j), b = byId(S.builders, j.builder_id), f = nextFu(j), late = f && f.due_date < todayISO();
+        return `<tr class="click" data-id="${j.id}"><td><div class="name">${h(jobTitle(j))}</div><div class="clip">${h(custName(c))}</div></td>
+          <td>${b ? h(b.name) : '<span class="faint">—</span>'}</td><td>${stageChip(j.stage)}</td>
+          <td class="nowrap">${j.start_date ? fmtShort(j.start_date) : '<span class="faint">—</span>'}</td>
+          <td class="nowrap">${j.final_date ? fmtShort(j.final_date) : '<span class="faint">—</span>'}</td>
+          <td>${j.disclosure_ack ? '<span class="ok-text">Received</span>' : ['accepted','quote_sent'].includes(j.stage) ? '<span class="warn-text">Waiting</span>' : '<span class="faint">—</span>'}</td>
+          <td>${outcomeChip(j.service_outcome)}</td>
+          <td class="nowrap">${f ? `<span class="${late ? 'warn-text' : ''}">${fmtShort(f.due_date)}</span>` : '<span class="faint">—</span>'}</td></tr>`; }).join('')}
+      </tbody></table>` : `<div class="empty"><strong>${S.jobs.length ? 'No jobs match' : 'No jobs yet'}</strong><p>${S.jobs.length ? 'Try a different stage or search.' : 'Jobs are created when you start a quote, or add one directly when a builder sends a start-up notice.'}</p></div>`}</div>`;
+  $$('[data-st]', view).forEach(b => b.onclick = () => { S.jFilter = b.dataset.st; renderJobs(view, r); });
+  const si = $('#j-search'); si.oninput = () => { S.jSearch = si.value; clearTimeout(si._t); si._t = setTimeout(() => { renderJobs(view, r); const n = $('#j-search'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 200); };
+  $('#j-builder') && ($('#j-builder').onchange = e => { S.jBuilder = e.target.value; renderJobs(view, r); });
+  $('#new-q2').onclick = () => newQuoteDialog();
+  $('#new-job').onclick = () => newJobDialog();
+  $$('tr[data-id]', view).forEach(tr => tr.onclick = () => go('jobs/' + tr.dataset.id));
+}
+
+function newJobDialog() {
+  const builders = S.builders.filter(b => b.active);
+  openDialog({
+    title: 'New job',
+    body: `<p class="desc" style="margin:0 0 12px">For a start-up notice that doesn’t have a quote yet. You can quote it from the job page.</p>
+      <div class="g2">
+        <div class="field"><label class="lbl" for="nj-first">First name</label><input id="nj-first" type="text"></div>
+        <div class="field"><label class="lbl" for="nj-last">Last name</label><input id="nj-last" type="text"></div>
+        <div class="field"><label class="lbl" for="nj-email">Email</label><input id="nj-email" type="email"></div>
+        <div class="field"><label class="lbl" for="nj-phone">Phone</label><input id="nj-phone" type="tel"></div></div>
+      <div class="field"><label class="lbl" for="nj-addr">Pool address</label><input id="nj-addr" type="text"></div>
+      <div class="g3"><div class="field"><label class="lbl" for="nj-city">City</label><input id="nj-city" type="text" value="Austin"></div>
+        <div class="field"><label class="lbl" for="nj-state">State</label><input id="nj-state" type="text" value="TX"></div>
+        <div class="field"><label class="lbl" for="nj-zip">ZIP</label><input id="nj-zip" type="text" inputmode="numeric"></div></div>
+      <div class="g3">
+        <div class="field"><label class="lbl" for="nj-builder">Builder</label><select id="nj-builder"><option value="">None</option>${builders.map(b => `<option value="${b.id}"${builders.length === 1 ? ' selected' : ''}>${h(b.name)}</option>`).join('')}</select></div>
+        <div class="field"><label class="lbl" for="nj-type">Pool</label><select id="nj-type">${opts([['new_build','New build'],['replaster','Replaster']], 'new_build')}</select></div>
+        <div class="field"><label class="lbl" for="nj-bill">Bill to</label><select id="nj-bill">${opts([['homeowner','Homeowner'],['builder','Builder']], 'homeowner')}</select></div></div>
+      <div class="g2"><div class="field"><label class="lbl" for="nj-notice">Notice received</label><input id="nj-notice" type="date" value="${todayISO()}"></div>
+        <div class="field"><label class="lbl" for="nj-start">Planned start date (if known)</label><input id="nj-start" type="date"></div></div>`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="nj-go">Create job</button>`,
+    onMount: d => $('#nj-go').onclick = async () => {
+      const v = id => $(id).value.trim() || null;
+      const c = { first_name: v('#nj-first'), last_name: v('#nj-last'), email: v('#nj-email'), phone: v('#nj-phone'), address: v('#nj-addr'), city: v('#nj-city'), state: v('#nj-state'), zip: v('#nj-zip') };
+      if (!c.first_name && !c.last_name && !c.address) return toast('Enter a customer name or pool address.', true);
+      try {
+        const cust = await q(sb.from('su_customers').insert(c).select().single(), 'Adding customer'); S.customers.push(cust);
+        const job = await q(sb.from('su_jobs').insert({ customer_id: cust.id, owner_id: S.user.id, stage: 'request', join_phase: 'prep', service_outcome: 'pending', builder_id: $('#nj-builder').value || null, pool_type: $('#nj-type').value,
+          bill_to: $('#nj-bill').value, notice_date: $('#nj-notice').value || todayISO(), start_date: $('#nj-start').value || null }).select().single(), 'Creating job');
+        S.jobs.push(job); logActivity(job.id, 'job_created', 'Start-up notice received');
+        d.close(); toast('Job created'); go('jobs/' + job.id);
+      } catch (_) {}
+    }
+  });
+}
+
+// ---------- job page ----------
+async function viewJob(view, id) {
+  const job = byId(S.jobs, id);
+  if (!job) { view.innerHTML = `<div class="panel empty"><strong>Job not found</strong><p><a href="#/jobs">Back to jobs</a></p></div>`; return; }
+  const c = custOf(job), b = byId(S.builders, job.builder_id);
+  const quotes = S.quotes.filter(x => x.job_id === id).sort((a, b2) => b2.version - a.version);
+  const acc = acceptedQuote(job);
+  const fus = S.followups.filter(f => f.job_id === id).sort((a, b2) => a.due_date.localeCompare(b2.due_date));
+  const o = phaseOffsets(), joinOff = o[job.join_phase] ?? 0;
+  const finalAuto = computedFinal(job);
+  const ins = job.inspection || {};
+  const checklist = Array.isArray(S.settings.inspection_checklist) ? S.settings.inspection_checklist : [];
+  const insDone = checklist.filter(qq => ins[qq]?.answer).length;
+  const refresh = () => viewJob(view, id);
+
+  // phases this job actually includes (from the accepted quote's lines if we have them)
+  let phasesIncluded = JOIN_PHASES.map(p => p[0]).filter(p => (o[p] ?? 0) >= joinOff);
+  if (acc) {
+    try { const ls = S._qlines?.[acc.id] || (S._qlines = { ...(S._qlines || {}), [acc.id]: await q(sb.from('su_quote_lines').select('phase').eq('quote_id', acc.id), 'Loading quote') })[acc.id];
+      const set = new Set(ls.map(l => l.phase)); set.add('final'); phasesIncluded = phasesIncluded.filter(p => set.has(p)); } catch (_) {}
+  }
+  if (route().parts[1] !== id) return;
+
+  view.innerHTML = `<div class="view-head"><button class="btn btn-sm btn-ghost" id="back">‹ Jobs</button><h2>${h(jobTitle(job))}</h2>${stageChip(job.stage)}
+      <div class="grow"></div><select id="j-stage" style="width:auto" aria-label="Stage">${opts(STAGE_LABELS, job.stage)}</select>
+      <div class="sub">${h(custName(c))}${b ? `, ${h(b.name)}` : ''}. ${job.pool_type === 'replaster' ? 'Replaster' : 'New build'}, billed to ${job.bill_to === 'builder' ? 'builder' : 'homeowner'}.</div></div>
+    <div class="jgrid">
+      <div class="jcol">
+        <div class="panel panel-pad"><div class="row" style="justify-content:space-between"><h3>Customer</h3><button class="btn btn-sm" id="j-edit">Edit</button></div>
+          <div class="kv"><div>${h(custName(c))}</div><div class="muted">${h(custAddr(c)) || '<span class="faint">No address</span>'}</div>
+            <div>${c?.phone ? `<a href="${telHref(c.phone)}">${h(c.phone)}</a>` : ''}${c?.phone && c?.email ? '<br>' : ''}${c?.email ? `<a href="mailto:${h(c.email)}">${h(c.email)}</a>` : ''}${!c?.phone && !c?.email ? '<span class="faint">No contact info</span>' : ''}</div></div>
+          <div class="row" style="gap:12px;font-size:13px">${c?.hubspot_url ? `<a href="${h(c.hubspot_url)}" target="_blank" rel="noopener">HubSpot</a>` : '<span class="faint">No HubSpot link</span>'}
+            ${c?.poolbrain_url ? `<a href="${h(c.poolbrain_url)}" target="_blank" rel="noopener">PoolBrain</a>` : '<span class="faint">No PoolBrain link</span>'}</div></div>
+
+        <div class="panel panel-pad"><h3>Timeline</h3><p class="desc">Set the start date and the final visit and follow-ups are scheduled from it.</p>
+          <div class="g2">
+            <div class="field"><label class="lbl" for="t-notice">Notice received</label><input id="t-notice" type="date" value="${h(job.notice_date || '')}"></div>
+            <div class="field"><label class="lbl" for="t-start">Start date</label><input id="t-start" type="date" value="${h(job.start_date || '')}"></div>
+            <div class="field"><label class="lbl" for="t-join">Poolie starts at</label><select id="t-join">${opts(JOIN_PHASES, job.join_phase)}</select></div>
+            <div class="field"><label class="lbl" for="t-final">Final visit</label><input id="t-final" type="date" value="${h(job.final_date_override ? job.final_date || '' : finalAuto || '')}"${job.final_date_override ? '' : ' disabled'}>
+              <label class="check" style="margin-top:6px;font-size:12px"><input type="checkbox" id="t-over"${job.final_date_override ? ' checked' : ''}> Set a different date</label></div>
+          </div>
+          ${job.notice_date && job.start_date && diffDays(job.start_date, job.notice_date) < 7 ? `<div class="hint warn-text" style="margin:-4px 0 10px">Only ${diffDays(job.start_date, job.notice_date)} days’ notice. The goal is 7 or more.</div>` : ''}
+          ${job.start_date ? `<div class="phases">${phasesIncluded.map(p => { const dt = addDays(job.start_date, (o[p] ?? 0) - joinOff), past = dt <= todayISO();
+            return `<div class="${past ? 'past' : ''}"><span>${h(label(JOIN_PHASES, p))}</span><span>${p === 'final' && job.final_date ? fmtDow(job.final_date) : fmtDow(dt)}</span></div>`; }).join('')}</div>` : ''}
+          <div class="row" style="justify-content:flex-end;margin-top:12px">${job.stage === 'in_startup' ? '<button class="btn" id="t-complete">Mark start-up complete</button>' : ''}<button class="btn btn-primary" id="t-save">Save timeline</button></div></div>
+
+        <div class="panel panel-pad"><h3>Plaster disclosure</h3><p class="desc">Record the customer’s text or email reply, or the signed quote.</p>
+          <label class="check" style="margin-bottom:10px"><input type="checkbox" id="d-ack"${job.disclosure_ack ? ' checked' : ''}> Customer acknowledged the disclosure</label>
+          <div class="g2"><div class="field"><label class="lbl" for="d-date">Date received</label><input id="d-date" type="date" value="${h(job.disclosure_ack_date || '')}"></div>
+            <div class="field"><label class="lbl" for="d-link">Link to reply or signed quote</label><input id="d-link" type="text" value="${h(job.disclosure_ack_link || '')}" placeholder="HubSpot email or contract URL"></div></div>
+          <div class="row" style="justify-content:space-between">${job.disclosure_ack_link ? `<a href="${h(job.disclosure_ack_link)}" target="_blank" rel="noopener" style="font-size:13px">Open record</a>` : '<span></span>'}<button class="btn btn-primary" id="d-save">Save disclosure</button></div></div>
+
+        <div class="panel panel-pad"><h3>Pre-start inspection</h3><p class="desc">${insDone}/${checklist.length} answered${job.inspection_done_at ? `, completed ${fmtShort(job.inspection_done_at)}` : ''}. Questions come from Settings.</p>
+          ${checklist.map((qq, i) => `<div class="insp"><div class="insp-q">${h(qq)}</div>
+            <select data-ia="${i}" aria-label="Answer">${opts([['', '—'], ['yes','Yes'], ['no','No'], ['na','N/A'], ...(/new build or replaster/i.test(qq) ? [['new_build','New build'],['replaster','Replaster']] : [])], ins[qq]?.answer || '')}</select>
+            <input type="text" data-in="${i}" placeholder="Notes" value="${h(ins[qq]?.note || '')}"></div>`).join('')}
+          <div class="row" style="justify-content:space-between;margin-top:10px"><div class="field" style="margin:0"><label class="lbl" for="i-done">Completed on</label><input id="i-done" type="date" value="${h(job.inspection_done_at || '')}" style="width:auto"></div>
+            <button class="btn btn-primary" id="i-save">Save inspection</button></div></div>
+      </div>
+
+      <div class="jcol">
+        <div class="panel panel-pad"><div class="row" style="justify-content:space-between"><h3>Quotes</h3><button class="btn btn-sm" id="j-newq">New quote</button></div>
+          ${quotes.length ? `<div class="mini-list">${quotes.map(x => `<a href="#/quotes/${x.id}" class="mini"><span>v${x.version} ${statusChip(x.status)}</span><span class="num">${money(x.total)}</span></a>`).join('')}</div>`
+            : '<p class="desc" style="margin:6px 0 0">No quotes yet.</p>'}</div>
+
+        <div class="panel panel-pad"><h3>Weekly service</h3>
+          <div class="g2" style="margin-top:8px"><div class="field"><label class="lbl" for="o-out">Outcome</label><select id="o-out">${opts(OUTCOMES, job.service_outcome)}</select></div>
+            <div class="field"><label class="lbl" for="o-note">Note</label><input id="o-note" type="text" value="${h(job.service_outcome_note || '')}" placeholder="${job.service_outcome === 'other' ? 'Required for Other' : 'Optional'}"></div></div>
+          <div class="row" style="justify-content:flex-end"><button class="btn btn-primary" id="o-save">Save outcome</button></div></div>
+
+        <div class="panel panel-pad"><h3>Follow-ups</h3>
+          ${fus.length ? `<div class="mini-list">${fus.map(f => { const late = f.status === 'open' && f.due_date < todayISO();
+            return `<button class="mini" data-fu="${f.id}"><span><span class="fu-dot fu-${f.status}${late ? ' late' : ''}"></span>${h(f.label)}</span>
+              <span class="${late ? 'warn-text' : 'faint'}">${f.status === 'open' ? fmtShort(f.due_date) : f.status === 'done' ? `${h(label(CHANNELS, f.channel))}${f.reached === false ? ', no reply' : ''}` : f.status === 'skipped' ? 'Skipped' : 'Closed'}</span></button>`; }).join('')}</div>`
+            : `<p class="desc" style="margin:6px 0 0">${job.final_date ? (CLOSED_OUTCOMES.includes(job.service_outcome) ? 'Outcome recorded, so no follow-ups are scheduled.' : 'No follow-ups scheduled. Check Settings → Follow-up schedule.') : 'Created automatically once the final visit date is set.'}</p>`}</div>
+
+        <div class="panel panel-pad"><h3>Activity</h3>
+          <div class="row" style="align-items:flex-start;margin:8px 0 12px"><textarea id="a-note" rows="2" class="grow" placeholder="Add a note"></textarea><button class="btn" id="a-add">Add note</button></div>
+          <div id="activity" class="activity"><div class="faint" style="font-size:12px">Loading…</div></div></div>
+      </div>
+    </div>
+    <div class="row" style="justify-content:flex-end;margin-top:18px"><button class="btn btn-ghost btn-danger btn-sm" id="j-del">Delete job</button></div>`;
+
+  $('#back').onclick = () => go('jobs');
+  $('#j-edit').onclick = () => editCustomer(job, c, refresh);
+  $('#j-newq').onclick = () => quoteForJobDialog(job);
+  $('#j-stage').onchange = async e => {
+    const stage = e.target.value;
+    try { Object.assign(job, await q(sb.from('su_jobs').update({ stage }).eq('id', id).select().single(), 'Updating stage'));
+      logActivity(id, 'stage_change', `Stage set to ${label(STAGE_LABELS, stage)}`);
+      if (stage === 'cancelled') await cancelOpenFollowups(job);
+      toast('Stage updated'); refresh(); } catch (_) {}
+  };
+
+  // timeline
+  const tOver = $('#t-over'), tFinal = $('#t-final'), tStart = $('#t-start'), tJoin = $('#t-join');
+  const preview = () => { if (!tOver.checked) tFinal.value = computedFinal({ ...job, start_date: tStart.value || null, join_phase: tJoin.value }) || ''; };
+  tOver.onchange = () => { tFinal.disabled = !tOver.checked; preview(); };
+  tStart.onchange = preview; tJoin.onchange = preview;
+  $('#t-save').onclick = async () => {
+    const start = tStart.value || null, over = tOver.checked;
+    const patch = { notice_date: $('#t-notice').value || null, start_date: start, join_phase: tJoin.value, final_date_override: over };
+    patch.final_date = over ? (tFinal.value || null) : computedFinal({ ...job, ...patch });
+    if (start && ['accepted','disclosure_ack'].includes(job.stage) && start <= todayISO()) patch.stage = 'in_startup';
+    try {
+      const before = job.final_date;
+      Object.assign(job, await q(sb.from('su_jobs').update(patch).eq('id', id).select().single(), 'Saving timeline'));
+      if (before !== job.final_date) logActivity(id, 'timeline', `Final visit ${job.final_date ? 'set to ' + fmtDow(job.final_date) : 'cleared'}${start ? `, start ${fmtDow(start)}` : ''}`);
+      await syncFollowups(job);
+      toast(job.final_date ? 'Timeline saved. Follow-ups scheduled.' : 'Timeline saved'); refresh();
+    } catch (_) {}
+  };
+  $('#t-complete') && ($('#t-complete').onclick = async () => {
+    try { Object.assign(job, await q(sb.from('su_jobs').update({ stage: 'final_complete' }).eq('id', id).select().single(), 'Updating stage'));
+      logActivity(id, 'stage_change', 'Start-up complete'); toast('Start-up marked complete'); refresh(); } catch (_) {}
+  });
+
+  // disclosure
+  $('#d-ack').onchange = e => { if (e.target.checked && !$('#d-date').value) $('#d-date').value = todayISO(); };
+  $('#d-save').onclick = async () => {
+    const ack = $('#d-ack').checked;
+    const patch = { disclosure_ack: ack, disclosure_ack_date: ack ? ($('#d-date').value || todayISO()) : null, disclosure_ack_link: $('#d-link').value.trim() || null };
+    if (ack && ['accepted'].includes(job.stage)) patch.stage = 'disclosure_ack';
+    try { const was = job.disclosure_ack; Object.assign(job, await q(sb.from('su_jobs').update(patch).eq('id', id).select().single(), 'Saving disclosure'));
+      if (was !== ack) logActivity(id, 'disclosure', ack ? 'Disclosure acknowledgment received' : 'Disclosure acknowledgment cleared');
+      toast('Disclosure saved'); refresh(); } catch (_) {}
+  };
+
+  // inspection
+  $('#i-save').onclick = async () => {
+    const out = {};
+    checklist.forEach((qq, i) => { const a = $(`[data-ia="${i}"]`).value, n = $(`[data-in="${i}"]`).value.trim(); if (a || n) out[qq] = { answer: a, note: n }; });
+    const patch = { inspection: out, inspection_done_at: $('#i-done').value || null };
+    const typeAns = Object.entries(out).find(([k]) => /new build or replaster/i.test(k))?.[1]?.answer;
+    if (['new_build','replaster'].includes(typeAns)) patch.pool_type = typeAns;
+    if (job.stage === 'request') patch.stage = 'inspection';
+    try { Object.assign(job, await q(sb.from('su_jobs').update(patch).eq('id', id).select().single(), 'Saving inspection'));
+      const issues = Object.entries(out).filter(([, v]) => v.answer === 'no').length;
+      logActivity(id, 'inspection', `Inspection saved${patch.inspection_done_at ? ' (complete)' : ''}${issues ? `, ${issues} issue${issues > 1 ? 's' : ''} flagged` : ''}`);
+      toast('Inspection saved'); refresh(); } catch (_) {}
+  };
+
+  // outcome
+  $('#o-save').onclick = async () => {
+    const out = $('#o-out').value, note = $('#o-note').value.trim();
+    if (out === 'other' && !note) return toast('Add a note describing the outcome.', true);
+    if (await setOutcome(job, out, note)) { toast('Outcome saved'); refresh(); }
+  };
+  $$('[data-fu]', view).forEach(bn => bn.onclick = () => followupDialog(byId(S.followups, bn.dataset.fu), refresh));
+
+  // activity
+  const drawActivity = async () => {
+    let acts = [];
+    try { acts = await q(sb.from('su_activity').select('*').eq('job_id', id).order('created_at', { ascending: false }).limit(60), 'Loading activity'); } catch (_) {}
+    acts.sort((a, b2) => String(b2.created_at).localeCompare(String(a.created_at)));
+    const el = $('#activity'); if (!el) return;
+    el.innerHTML = acts.length ? acts.map(a => `<div class="act${a.kind === 'note' ? ' note' : ''}"><div>${h(a.message)}</div><div class="faint">${new Date(a.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</div></div>`).join('')
+      : '<div class="faint" style="font-size:12px">No activity yet.</div>';
+  };
+  drawActivity();
+  $('#a-add').onclick = async () => {
+    const t = $('#a-note').value.trim(); if (!t) return;
+    try { await q(sb.from('su_activity').insert({ job_id: id, kind: 'note', message: t, created_by: S.user.id }), 'Adding note'); $('#a-note').value = ''; drawActivity(); } catch (_) {}
+  };
+  $('#j-del').onclick = async () => {
+    if (!(await confirmDialog('Delete job', `Delete this job, its ${quotes.length} quote${quotes.length === 1 ? '' : 's'}, follow-ups, and activity? The customer record stays. To keep the history, set the stage to Cancelled instead.`))) return;
+    try { await q(sb.from('su_jobs').delete().eq('id', id), 'Deleting job');
+      S.jobs = S.jobs.filter(j => j.id !== id); S.quotes = S.quotes.filter(x => x.job_id !== id); S.followups = S.followups.filter(f => f.job_id !== id);
+      toast('Job deleted'); go('jobs'); } catch (_) {}
+  };
+}
+
+function quoteForJobDialog(job) {
+  const tpls = templatesFor(job.builder_id);
+  openDialog({
+    title: 'New quote for this job',
+    body: `<div class="field"><label class="lbl" for="qj-tpl">Start from template</label><select id="qj-tpl">${tpls.map(t => `<option value="${t.id}">${h(t.name)}${t.builder_id ? '' : ' (standard)'}</option>`).join('')}<option value="">Blank quote</option></select></div>`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="qj-go">Create quote</button>`,
+    onMount: d => $('#qj-go').onclick = async () => {
+      const t = byId(S.templates, $('#qj-tpl').value);
+      try { const qt = await createQuote(job, custOf(job), { lines: t ? linesFromTemplate(t.id, job.builder_id) : [], template: t });
+        d.close(); toast('Quote created'); go('quotes/' + qt.id); } catch (_) {}
+    }
+  });
+}
+
+// ---------- today ----------
+function todayCounts() {
+  const t = todayISO();
+  const due = S.followups.filter(f => f.status === 'open' && f.due_date <= t && byId(S.jobs, f.job_id)).length;
+  return due;
+}
+function renderToday(view) {
+  const t = todayISO(), wk = addDays(t, 7);
+  const live = j => j && j.stage !== 'cancelled';
+  const due = S.followups.filter(f => f.status === 'open' && f.due_date <= t && live(byId(S.jobs, f.job_id))).sort((a, b) => a.due_date.localeCompare(b.due_date));
+  const upcoming = S.followups.filter(f => f.status === 'open' && f.due_date > t && f.due_date <= wk && live(byId(S.jobs, f.job_id))).sort((a, b) => a.due_date.localeCompare(b.due_date));
+  const needAck = S.jobs.filter(j => live(j) && !j.disclosure_ack && (j.stage === 'accepted' || S.quotes.some(x => x.job_id === j.id && x.status === 'sent')));
+  const noStart = S.jobs.filter(j => ['accepted','disclosure_ack'].includes(j.stage) && !j.start_date);
+  const startingSoon = S.jobs.filter(j => live(j) && j.start_date && j.start_date >= t && j.start_date <= wk && STAGES.indexOf(j.stage) < STAGES.indexOf('in_startup'));
+  const finishing = S.jobs.filter(j => live(j) && j.final_date && j.final_date >= t && j.final_date <= wk && j.stage !== 'final_complete').sort((a, b) => a.final_date.localeCompare(b.final_date));
+  const staleQuotes = S.quotes.filter(x => x.status === 'sent' && x.sent_at && diffDays(t, x.sent_at.slice(0, 10)) >= 3);
+  const md = S.user.user_metadata || {};
+  const hello = new Date().getHours() < 12 ? 'Good morning' : new Date().getHours() < 17 ? 'Good afternoon' : 'Good evening';
+
+  const fuRow = f => { const j = byId(S.jobs, f.job_id), c = custOf(j), late = f.due_date < t;
+    return `<button class="trow" data-fu="${f.id}"><div><div class="name">${h(jobTitle(j))}</div><div class="faint" style="font-size:12px">${h(f.label)}, ${h(custName(c))}</div></div>
+      <span class="${late ? 'warn-text' : 'muted'} nowrap" style="font-size:12.5px">${late ? `${-diffDays(f.due_date, t)}d overdue` : f.due_date === t ? 'Today' : fmtDow(f.due_date)}</span></button>`; };
+  const jobRow = (j, right) => `<button class="trow" data-job="${j.id}"><div><div class="name">${h(jobTitle(j))}</div><div class="faint" style="font-size:12px">${h(custName(custOf(j)))}${j.builder_id ? `, ${h(byId(S.builders, j.builder_id)?.name || '')}` : ''}</div></div><span class="muted nowrap" style="font-size:12.5px">${right}</span></button>`;
+  const section = (title, sub, rows, empty) => `<div class="panel"><div class="panel-pad" style="padding-bottom:8px"><h3>${title} ${rows.length ? `<span class="count">${rows.length}</span>` : ''}</h3>${sub ? `<p class="desc" style="margin:0">${sub}</p>` : ''}</div>
+    <div class="tlist">${rows.length ? rows.join('') : `<div class="faint" style="padding:4px 18px 16px;font-size:13px">${empty}</div>`}</div></div>`;
+
+  view.innerHTML = `<div class="view-head"><h2>${hello}${md.full_name ? `, ${h(md.full_name.split(' ')[0])}` : ''}</h2>
+      <div class="sub">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}. ${due.length ? `${due.length} follow-up${due.length > 1 ? 's' : ''} to do.` : 'No follow-ups due.'}</div></div>
+    <div class="tgrid">
+      <div>${section('Follow-ups due', 'Log each one after you call, text, or email.', due.map(fuRow), 'You’re caught up.')}
+        ${upcoming.length ? section('Coming up this week', '', upcoming.map(fuRow), '') : ''}</div>
+      <div>
+        ${section('Waiting on disclosure', 'Quotes out or accepted without an acknowledgment on file.', needAck.map(j => jobRow(j, label(STAGE_LABELS, j.stage))), 'All acknowledgments are in.')}
+        ${section('Accepted, no start date', 'Get the start date from the builder.', noStart.map(j => jobRow(j, j.notice_date ? `Notice ${fmtShort(j.notice_date)}` : '')), 'Every accepted job has a start date.')}
+        ${startingSoon.length ? section('Starting this week', '', startingSoon.map(j => jobRow(j, fmtDow(j.start_date))), '') : ''}
+        ${section('Final visits this week', 'Customers to line up for weekly service.', finishing.map(j => jobRow(j, fmtDow(j.final_date))), 'No final visits in the next 7 days.')}
+        ${staleQuotes.length ? section('Quotes with no answer', 'Sent 3 or more days ago.', staleQuotes.map(x => { const j = jobOf(x); return j ? `<button class="trow" data-quote="${x.id}"><div><div class="name">${h(jobTitle(j))}</div><div class="faint" style="font-size:12px">${money(x.total)}</div></div><span class="muted nowrap" style="font-size:12.5px">Sent ${fmtShort(x.sent_at)}</span></button>` : ''; }), '') : ''}
+      </div></div>`;
+  $$('[data-fu]', view).forEach(b => b.onclick = () => followupDialog(byId(S.followups, b.dataset.fu), () => render()));
+  $$('[data-job]', view).forEach(b => b.onclick = () => go('jobs/' + b.dataset.job));
+  $$('[data-quote]', view).forEach(b => b.onclick = () => go('quotes/' + b.dataset.quote));
 }
 
 // =====================================================================

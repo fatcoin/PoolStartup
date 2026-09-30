@@ -4,9 +4,11 @@ Quoting, job tracking, and weekly-service follow-up for pool start-ups.
 Stack: single-page `index.html` + Supabase (auth + database) + Vercel (hosting).
 
 ## Files
-- `index.html` — the app (coming in phase 1)
+- `index.html` — the app
+- `pool-bg.jpg` — Pool Water background photo
 - `config.js` — your Supabase URL + anon key (copy from `config.example.js`)
-- `supabase/schema.sql` — run once in the Supabase SQL Editor
+- `supabase/schema.sql` — run once in the Supabase SQL Editor (new projects)
+- `supabase/migration_002_quotes.sql` — run once if your project was set up before the quote builder
 - `poolie-logo.png` — embedded in quote PDFs
 
 ## Setup
