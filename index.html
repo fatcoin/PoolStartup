@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Poolie Start-Ups</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧪</text></svg>">
+<style>
+  :root {
+    /* "Pool Water" theme, shared with the Commercial Pools tracker */
+    --bg: #0e1520; --bg-deep: #0a111a; --surface: rgba(24,37,56,.50);
+    --surface-raised: rgba(32,48,70,.58); --surface-pressed: rgba(14,24,38,.60); --surface-solid: #16243a;
+    --border: rgba(255,255,255,.13); --border-strong: rgba(0,180,216,.30);
+    --text: #eef7fb; --text-muted: #a9bccb; --text-faint: #6f7b8d;
+    --accent: #00b4d8; --accent-bright: #48cae4; --accent-hover: #0096c7; --accent-pressed: #0077b6; --accent-glow: rgba(0,180,216,.35);
+    --brand: #1676b7; --brand-orange: #f39a2b;
+    --danger: #ef476f; --warn: #ffb703; --success: #06d6a0;
+    --radius: 12px; --radius-sm: 8px; --radius-lg: 18px;
+    --neu-out: inset 0 1px 0 rgba(255,255,255,.13), 0 12px 38px rgba(0,0,0,.38);
+    --neu-out-sm: inset 0 1px 0 rgba(255,255,255,.10), 0 6px 18px rgba(0,0,0,.30);
+    --neu-in: inset 0 1px 3px rgba(0,0,0,.34); --neu-in-sm: inset 0 1px 2px rgba(0,0,0,.28);
+    --ease: cubic-bezier(0.4,0,0.2,1);
+    --top-h: 58px;
+    color-scheme: dark;
+    box-sizing: border-box;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body { background: var(--bg); color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px; line-height: 1.45; -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent-bright); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  :focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 2px; }
+  [hidden] { display: none !important; }
+  .muted { color: var(--text-muted); } .faint { color: var(--text-faint); }
+  .num { font-variant-numeric: tabular-nums; }
+  .right { text-align: right; }
+  h2, h3 { letter-spacing: -.01em; }
+
+  /* controls */
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 8px 14px; border: none; background: var(--surface); color: var(--text);
+    border-radius: var(--radius-sm); cursor: pointer; font: 500 13px/1.2 inherit; font-family: inherit;
+    box-shadow: var(--neu-out-sm); transition: color .15s var(--ease), box-shadow .15s var(--ease), transform .15s var(--ease); white-space: nowrap; }
+  .btn:hover { color: var(--accent-bright); }
+  .btn:active { box-shadow: var(--neu-in-sm); transform: translateY(1px); }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn-primary { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-pressed) 100%); color: #fff;
+    box-shadow: var(--neu-out-sm), 0 0 12px var(--accent-glow); }
+  .btn-primary:hover { color: #fff; }
+  .btn-danger { color: var(--danger); }
+  .btn-ghost.btn-danger { color: var(--danger); }
+  .btn-sm { padding: 5px 10px; font-size: 12px; }
+  .btn-ghost { background: transparent; box-shadow: none; color: var(--text-muted); }
+  .btn-ghost:hover { background: var(--surface); }
+  .icon-btn { background: none; border: 0; color: var(--text-muted); cursor: pointer; padding: 4px 6px; border-radius: 6px; font-size: 14px; line-height: 1; }
+  .icon-btn:hover { color: var(--text); background: var(--surface); }
+  .icon-btn:disabled { opacity: .3; cursor: default; background: none; }
+  input[type=text], input[type=email], input[type=password], input[type=tel], input[type=number], select, textarea {
+    width: 100%; padding: 8px 10px; background: var(--surface-pressed); color: var(--text);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--neu-in-sm);
+    font: 13px/1.35 inherit; font-family: inherit; }
+  input::placeholder, textarea::placeholder { color: var(--text-faint); }
+  select { appearance: none; background-image: linear-gradient(45deg, transparent 50%, var(--text-muted) 50%), linear-gradient(135deg, var(--text-muted) 50%, transparent 50%);
+    background-position: calc(100% - 14px) 55%, calc(100% - 9px) 55%; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 26px; }
+  textarea { resize: vertical; min-height: 70px; }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+  label.lbl { display: block; font-size: 12px; color: var(--text-muted); margin: 0 0 4px; }
+  .hint { font-size: 12px; color: var(--text-faint); margin-top: 4px; }
+  .field { margin-bottom: 12px; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .grow { flex: 1; min-width: 0; }
+  .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+  .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 12px; }
+  .check { display: flex; gap: 8px; align-items: center; font-size: 13px; cursor: pointer; }
+  .check input { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+  .chip { display: inline-flex; align-items: center; gap: 5px; padding: 2px 9px; border-radius: 999px; font-size: 11.5px;
+    background: var(--surface-raised); color: var(--text); white-space: nowrap; border: 1px solid var(--border-strong); }
+  .chip.soft { background: rgba(0,180,216,.12); color: var(--accent-bright); border-color: transparent; }
+  .chip.warn { background: rgba(255,183,3,.12); color: var(--warn); border-color: transparent; }
+  .chip.off { background: transparent; color: var(--text-faint); border-color: var(--border); }
+    .ph { background: var(--surface-raised); padding: 1px 6px; border-radius: 5px; font-size: 12px; color: var(--accent-bright); cursor: pointer; border: 0; font-family: inherit; }
+
+  /* layout */
+  .top { height: var(--top-h); display: flex; align-items: center; gap: 18px; padding: 0 18px;
+    background: var(--bg-deep); border-bottom: 1px solid var(--border); position: sticky; top: env(safe-area-inset-top, 0px); z-index: 50; }
+  .brand { font-weight: 700; font-size: 16px; display: flex; gap: 10px; align-items: center; white-space: nowrap; }
+  .brand .mark { width: 26px; height: 26px; border-radius: 7px; background: var(--brand); display: grid; place-items: center; position: relative; }
+  .brand .mark::after { content: ""; position: absolute; top: 3px; right: 3px; width: 6px; height: 6px; border-radius: 50%; background: var(--brand-orange); }
+  .brand .mark span { color: #fff; font-weight: 800; font-size: 15px; font-style: italic; }
+  .brand small { font-weight: 500; color: var(--text-faint); font-size: 12px; }
+  .tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: 1; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { background: none; border: 0; color: var(--text-muted); padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer;
+    font: 500 13.5px inherit; font-family: inherit; white-space: nowrap; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent-bright); background: var(--surface); box-shadow: var(--neu-in-sm); }
+  .top-right { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 22px 22px 60px; padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px)); }
+  .view-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+  .view-head h2 { margin: 0; font-size: 20px; }
+  .view-head .sub { flex-basis: 100%; margin-top: -6px; font-size: 13px; color: var(--text-muted); }
+  .settings { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 26px; align-items: start; }
+  .subnav { display: flex; flex-direction: column; gap: 2px; position: sticky; top: calc(var(--top-h) + 22px); }
+  .subnav a { color: var(--text-muted); padding: 8px 12px; border-radius: var(--radius-sm); font-weight: 500; }
+  .subnav a:hover { color: var(--text); text-decoration: none; background: var(--surface); }
+  .subnav a.active { color: var(--accent-bright); background: var(--surface); box-shadow: var(--neu-in-sm); }
+  #sview { min-width: 0; }
+  .panel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--neu-out-sm); }
+  .panel-pad { padding: 18px; }
+  .panel + .panel { margin-top: 16px; }
+  .panel h3 { margin: 0 0 4px; font-size: 15px; }
+  .panel .desc { margin: 0 0 14px; font-size: 13px; color: var(--text-muted); }
+
+  /* tables */
+  .tbl-wrap { overflow-x: auto; }
+  table.tbl { width: 100%; border-collapse: collapse; }
+  .tbl th { text-align: left; font-weight: 500; font-size: 12px; color: var(--text-faint); padding: 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  .tbl th.right { text-align: right; }
+  .tbl td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,.06); vertical-align: middle; }
+  .tbl tr:last-child td { border-bottom: 0; }
+  .tbl tr.click { cursor: pointer; }
+  .tbl tr.click:hover td { background: rgba(255,255,255,.03); }
+  .tbl tr.archived td { opacity: .5; }
+  .tbl .name { font-weight: 500; }
+  .tbl .clip { color: var(--text-faint); font-size: 12px; max-width: 460px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tbl input[type=text], .tbl input[type=number] { padding: 6px 8px; }
+  .tbl .w-qty { width: 76px; } .tbl .w-price { width: 110px; }
+  .tbl tfoot td { border-top: 1px solid var(--border); border-bottom: 0; }
+  .empty { padding: 34px 18px; text-align: center; color: var(--text-muted); }
+  .empty strong { display: block; color: var(--text); font-size: 15px; margin-bottom: 4px; }
+  .empty p { margin: 0 auto 14px; max-width: 460px; }
+
+  .editor-lines td.drag { width: 58px; white-space: nowrap; }
+  .line-wording { display: grid; gap: 8px; padding: 4px 0 6px; }
+  .override { color: var(--warn); }
+  .totals { display: grid; grid-template-columns: auto 120px; gap: 4px 18px; justify-content: end; padding: 14px 18px; font-size: 13px; }
+  .totals .t { font-weight: 700; font-size: 15px; }
+  .savebar { position: sticky; bottom: 0; display: flex; gap: 10px; justify-content: flex-end; align-items: center; padding: 12px 0;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(to top, var(--bg) 70%, transparent); margin-top: 16px; }
+  .savebar .dirty { margin-right: auto; color: var(--warn); font-size: 12.5px; }
+
+  /* auth */
+  .auth { min-height: 100%; display: grid; place-items: center; padding: 24px; }
+  .auth-card { width: 100%; max-width: 380px; }
+  .auth-card .brand { justify-content: center; margin-bottom: 22px; font-size: 20px; }
+  .auth-card .brand .mark { width: 34px; height: 34px; } .auth-card .brand .mark span { font-size: 20px; }
+  .auth-card h2 { margin: 0 0 4px; font-size: 18px; }
+  .auth-card p { margin: 0 0 16px; color: var(--text-muted); font-size: 13px; }
+  .auth-card .btn-primary { width: 100%; padding: 10px; }
+  .auth-alt { margin-top: 14px; text-align: center; font-size: 13px; }
+  .form-err { color: var(--danger); font-size: 12.5px; margin: -4px 0 12px; }
+  .form-ok { color: var(--success); font-size: 12.5px; margin: -4px 0 12px; }
+
+  /* dialog + toast + menu */
+  dialog { border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface-solid); color: var(--text);
+    padding: 0; width: min(560px, calc(100vw - 24px)); max-height: calc(100vh - 40px); box-shadow: var(--neu-out); }
+  dialog::backdrop { background: rgba(4,8,14,.66); }
+  .dlg-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 18px 6px; }
+  .dlg-head h3 { margin: 0; font-size: 16px; }
+  .dlg-body { padding: 8px 18px 4px; overflow-y: auto; max-height: calc(100vh - 170px); }
+  .dlg-foot { display: flex; gap: 8px; justify-content: flex-end; padding: 12px 18px 16px; }
+  .dlg-foot .left { margin-right: auto; display: flex; gap: 8px; }
+  #toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 1000; display: grid; gap: 8px; }
+  .toast { background: var(--surface-solid); border: 1px solid var(--border-strong); padding: 10px 16px; border-radius: 10px; box-shadow: var(--neu-out-sm); font-size: 13px; }
+  .toast.err { border-color: rgba(239,71,111,.5); color: #ffd3dd; }
+  .menu { position: relative; }
+  .menu-pop { position: absolute; right: 0; top: calc(100% + 6px); background: var(--surface-solid); border: 1px solid var(--border);
+    border-radius: 10px; box-shadow: var(--neu-out); min-width: 200px; padding: 6px; z-index: 60; }
+  .menu-pop .who { padding: 8px 10px; font-size: 12px; color: var(--text-faint); border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+  .menu-pop button { display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--text); padding: 8px 10px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 13px; }
+  .menu-pop button:hover { background: var(--surface); }
+  .loading { padding: 60px; text-align: center; color: var(--text-muted); }
+
+  @media (max-width: 820px) {
+    .settings { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+    .savebar { flex-wrap: wrap; }
+    .top { gap: 10px; padding: 0 12px; }
+    .subnav { flex-direction: row; overflow-x: auto; position: static; scrollbar-width: none; }
+    .subnav a { white-space: nowrap; }
+    .brand small { display: none; }
+    .wrap { padding: 16px 14px 60px; }
+    .g2, .g3 { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Loading…</div></div>
+<div id="toasts" aria-live="polite"></div>
+<dialog id="dlg"></dialog>
+
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+<script>
+'use strict';
+// =====================================================================
+// Poolie Start-Up Tool — Phase 1: sign-in + Settings
+// =====================================================================
+
+const INITIAL_HASH = location.hash;   // capture before Supabase consumes auth tokens
+const CFG = window.POOLIE_CONFIG || {};
+const SB_KEY = CFG.SUPABASE_PUBLISHABLE_KEY || CFG.SUPABASE_ANON_KEY;
+const sb = (window.supabase && CFG.SUPABASE_URL && SB_KEY) ? window.supabase.createClient(CFG.SUPABASE_URL, SB_KEY) : null;
+
+const PHASES = [['prep','Prep'],['week1','Week 1'],['week2','Week 2'],['week3','Week 3'],['week4','Week 4'],['final','Final'],['none','No timeline']];
+const JOIN_PHASES = PHASES.filter(p => p[0] !== 'none');
+const TEAMS = [['service','Service'],['repairs','Repairs'],['none','None']];
+const PLACEHOLDERS = ['{first_name}','{last_name}','{rep_name}','{final_day}','{address}','{builder}'];
+const label = (list, key) => (list.find(p => p[0] === key) || [key, key])[1];
+
+const S = {
+  user: null, loaded: false,
+  items: [], builders: [], builderPrices: [], templates: [], templateLines: [], cadence: [], settings: {},
+  draft: null, dirty: false, showArchived: false,
+};
+
+// ---------- small helpers ----------
+const $ = (sel, el = document) => el.querySelector(sel);
+const $$ = (sel, el = document) => [...el.querySelectorAll(sel)];
+const h = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const money = n => (Number(n) || 0).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const numOrNull = v => { const s = String(v ?? '').trim().replace(/[$,]/g, ''); if (s === '') return null; const n = Number(s); return Number.isFinite(n) ? n : NaN; };
+const round2 = n => Math.round((Number(n) || 0) * 100) / 100;
+const byId = (list, id) => list.find(x => x.id === id);
+const opts = (list, sel) => list.map(([v, t]) => `<option value="${h(v)}"${v === sel ? ' selected' : ''}>${h(t)}</option>`).join('');
+
+function toast(msg, isErr) {
+  const el = document.createElement('div');
+  el.className = 'toast' + (isErr ? ' err' : '');
+  el.textContent = msg;
+  $('#toasts').appendChild(el);
+  setTimeout(() => el.remove(), isErr ? 6000 : 2800);
+}
+function fail(err, what) {
+  console.error(err);
+  toast(`${what}: ${err?.message || err}`, true);
+}
+async function q(promise, what) {
+  const { data, error } = await promise;
+  if (error) { fail(error, what); throw error; }
+  return data;
+}
+
+// ---------- dialog ----------
+const dlg = $('#dlg');
+function openDialog({ title, body, foot, onMount }) {
+  dlg.innerHTML = `<div class="dlg-head"><h3>${h(title)}</h3><button class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <div class="dlg-body">${body}</div><div class="dlg-foot">${foot || ''}</div>`;
+  dlg.querySelectorAll('[data-close]').forEach(b => b.onclick = () => dlg.close());
+  dlg.showModal();
+  onMount && onMount(dlg);
+  const first = dlg.querySelector('input, textarea, select');
+  first && first.focus();
+}
+function confirmDialog(title, message, okText = 'Delete', danger = true) {
+  return new Promise(resolve => {
+    openDialog({
+      title, body: `<p style="margin:0 0 8px">${message}</p>`,
+      foot: `<button class="btn" data-close>Cancel</button><button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" id="dlg-ok">${h(okText)}</button>`,
+      onMount: d => {
+        let answered = false;
+        d.querySelector('#dlg-ok').onclick = () => { answered = true; d.close(); resolve(true); };
+        d.addEventListener('close', () => { if (!answered) resolve(false); }, { once: true });
+      }
+    });
+  });
+}
+
+// ---------- pricing ----------
+function builderPrice(builderId, itemId) {
+  if (!builderId) return null;
+  return S.builderPrices.find(p => p.builder_id === builderId && p.item_id === itemId) || null;
+}
+function resolvedPrice(itemId, builderId) {
+  const bp = builderPrice(builderId, itemId);
+  if (bp) return Number(bp.price);
+  const it = byId(S.items, itemId);
+  return it ? Number(it.default_price) : 0;
+}
+function lineCalc(line, builderId) {
+  const it = byId(S.items, line.item_id);
+  const list = resolvedPrice(line.item_id, builderId);
+  const unit = line.unit_price == null ? list : Number(line.unit_price);
+  const qty = Number(line.qty) || 0;
+  const isNote = it?.is_note;
+  const total = isNote ? 0 : round2(unit * qty);
+  return { it, list, unit, qty, total, taxable: !!it?.taxable && !isNote, isNote, overridden: line.unit_price != null && Number(line.unit_price) !== list };
+}
+function templateTotals(lines, builderId) {
+  const rate = Number(S.settings.tax_rate ?? 0.0825);
+  let sub = 0, taxBase = 0;
+  lines.forEach(l => { const c = lineCalc(l, builderId); sub += c.total; if (c.taxable) taxBase += c.total; });
+  const tax = round2(taxBase * rate);
+  return { sub: round2(sub), tax, total: round2(sub + tax), rate };
+}
+
+// ---------- data ----------
+async function loadAll() {
+  const [items, builders, bps, tpls, tlines, cadence, settings] = await Promise.all([
+    q(sb.from('su_items').select('*').order('sort').order('name'), 'Loading line items'),
+    q(sb.from('su_builders').select('*').order('name'), 'Loading builders'),
+    q(sb.from('su_builder_prices').select('*'), 'Loading price books'),
+    q(sb.from('su_templates').select('*').order('sort').order('name'), 'Loading templates'),
+    q(sb.from('su_template_lines').select('*').order('sort'), 'Loading template lines'),
+    q(sb.from('su_cadence_steps').select('*').order('offset_days').order('sort'), 'Loading follow-ups'),
+    q(sb.from('su_settings').select('*'), 'Loading settings'),
+  ]);
+  Object.assign(S, { items, builders, builderPrices: bps, templates: tpls, templateLines: tlines, cadence, loaded: true });
+  S.settings = Object.fromEntries(settings.map(r => [r.key, r.value]));
+}
+
+// ---------- routing ----------
+function route() {
+  const hsh = location.hash.startsWith('#/') ? location.hash.slice(2) : '';
+  const parts = hsh.split('/').filter(Boolean);
+  return { tab: parts[0] || 'settings', sub: parts[1] || 'items', id: parts[2] || null };
+}
+function go(path) {
+  if (S.dirty && !confirm('You have unsaved changes. Leave without saving?')) return;
+  S.dirty = false; S.draft = null;
+  if (location.hash === '#/' + path) render(); else location.hash = '#/' + path;
+}
+window.addEventListener('hashchange', () => { if (S.user) render(); });
+window.addEventListener('beforeunload', e => { if (S.dirty) { e.preventDefault(); e.returnValue = ''; } });
+function markDirty() {
+  if (!S.dirty) { S.dirty = true; const d = $('#dirty-flag'); if (d) d.hidden = false; }
+}
+
+// =====================================================================
+// AUTH
+// =====================================================================
+function brandHTML(sub = true) {
+  return `<div class="brand"><div class="mark" aria-hidden="true"><span>p</span></div>Poolie Start-Ups${sub ? '<small>sales</small>' : ''}</div>`;
+}
+function renderAuth(mode = 'login', msg = '') {
+  const root = $('#root');
+  const forms = {
+    login: `<h2>Sign in</h2><p>Use the email your invite was sent to.</p>
+      <form id="f"><div class="field"><label class="lbl" for="em">Email</label><input id="em" type="email" autocomplete="email" required></div>
+      <div class="field"><label class="lbl" for="pw">Password</label><input id="pw" type="password" autocomplete="current-password" required></div>
+      <div class="form-err" id="err" hidden></div><button class="btn btn-primary" type="submit">Sign in</button></form>
+      <div class="auth-alt"><a href="#" id="to-forgot">Forgot password?</a></div>`,
+    forgot: `<h2>Reset your password</h2><p>We'll email you a link to set a new one.</p>
+      <form id="f"><div class="field"><label class="lbl" for="em">Email</label><input id="em" type="email" autocomplete="email" required></div>
+      <div class="form-err" id="err" hidden></div><div class="form-ok" id="ok" hidden></div>
+      <button class="btn btn-primary" type="submit">Send reset link</button></form>
+      <div class="auth-alt"><a href="#" id="to-login">Back to sign in</a></div>`,
+    setpw: `<h2>Set your password</h2><p>${h(msg || 'Choose a password to finish setting up your account.')}</p>
+      <form id="f"><div class="field"><label class="lbl" for="pw">New password</label><input id="pw" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="field"><label class="lbl" for="pw2">Confirm password</label><input id="pw2" type="password" autocomplete="new-password" minlength="8" required></div>
+      <div class="hint" style="margin:-6px 0 12px">At least 8 characters.</div>
+      <div class="form-err" id="err" hidden></div><button class="btn btn-primary" type="submit">Save password</button></form>`,
+  };
+  root.innerHTML = `<div class="auth"><div class="auth-card">${brandHTML(false)}<div class="panel panel-pad">${forms[mode]}</div></div></div>`;
+  const err = t => { const e = $('#err'); e.textContent = t; e.hidden = !t; };
+  if (msg && mode === 'login') err(msg);
+  $('#to-forgot') && ($('#to-forgot').onclick = e => { e.preventDefault(); renderAuth('forgot'); });
+  $('#to-login') && ($('#to-login').onclick = e => { e.preventDefault(); renderAuth('login'); });
+  $('#f').onsubmit = async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]'); btn.disabled = true; err('');
+    try {
+      if (mode === 'login') {
+        const { error } = await sb.auth.signInWithPassword({ email: $('#em').value.trim(), password: $('#pw').value });
+        if (error) throw error;
+      } else if (mode === 'forgot') {
+        const { error } = await sb.auth.resetPasswordForEmail($('#em').value.trim(), { redirectTo: location.origin + location.pathname });
+        if (error) throw error;
+        const ok = $('#ok'); ok.textContent = 'Check your email for the reset link.'; ok.hidden = false;
+      } else if (mode === 'setpw') {
+        if ($('#pw').value !== $('#pw2').value) throw new Error('Passwords don’t match.');
+        const { error } = await sb.auth.updateUser({ password: $('#pw').value });
+        if (error) throw error;
+        toast('Password saved');
+        window.__clearInvite && window.__clearInvite();
+        history.replaceState(null, '', location.pathname + '#/settings/items');
+        await startApp();
+      }
+    } catch (ex) { err(ex.message || String(ex)); }
+    btn.disabled = false;
+  };
+}
+
+async function startApp() {
+  $('#root').innerHTML = '<div class="loading">Loading…</div>';
+  try { await loadAll(); } catch (e) {
+    $('#root').innerHTML = `<div class="wrap"><div class="panel empty"><strong>Couldn’t load data</strong>
+      <p>${h(e.message)}. If this is a new project, make sure supabase/schema.sql has been run in the Supabase SQL Editor.</p>
+      <button class="btn" onclick="location.reload()">Try again</button></div></div>`;
+    return;
+  }
+  render();
+}
+
+// =====================================================================
+// SHELL
+// =====================================================================
+function render() {
+  if (!S.loaded) return;
+  const r = route();
+  const tabs = [['today','Today'],['jobs','Jobs'],['quotes','Quotes'],['settings','Settings']];
+  $('#root').innerHTML = `
+    <header class="top">${brandHTML()}
+      <nav class="tabs">${tabs.map(([k, t]) => `<button class="tab${r.tab === k ? ' active' : ''}" data-tab="${k}">${t}</button>`).join('')}</nav>
+      <div class="top-right menu"><button class="btn btn-sm btn-ghost" id="me-btn" aria-haspopup="true">${h(S.user.email.split('@')[0])} ▾</button>
+        <div class="menu-pop" id="me-menu" hidden><div class="who">${h(S.user.email)}</div>
+          <button id="me-pw">Change password</button><button id="me-out">Sign out</button></div></div>
+    </header>
+    <div class="wrap" id="view"></div>`;
+  $$('[data-tab]').forEach(b => b.onclick = () => go(b.dataset.tab === 'settings' ? 'settings/items' : b.dataset.tab));
+  const menu = $('#me-menu');
+  $('#me-btn').onclick = e => { e.stopPropagation(); menu.hidden = !menu.hidden; };
+  document.onclick = () => { menu.hidden = true; };
+  $('#me-out').onclick = async () => { if (S.dirty && !confirm('Discard unsaved changes and sign out?')) return; S.dirty = false; await sb.auth.signOut(); };
+  $('#me-pw').onclick = () => openDialog({
+    title: 'Change password',
+    body: `<div class="field"><label class="lbl">New password</label><input id="np" type="password" minlength="8" autocomplete="new-password"></div>
+      <div class="field"><label class="lbl">Confirm password</label><input id="np2" type="password" minlength="8" autocomplete="new-password"></div>`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="np-save">Save password</button>`,
+    onMount: d => d.querySelector('#np-save').onclick = async () => {
+      const a = $('#np').value, b = $('#np2').value;
+      if (a.length < 8) return toast('Use at least 8 characters.', true);
+      if (a !== b) return toast('Passwords don’t match.', true);
+      const { error } = await sb.auth.updateUser({ password: a });
+      if (error) return fail(error, 'Saving password');
+      d.close(); toast('Password saved');
+    }
+  });
+
+  const view = $('#view');
+  if (r.tab === 'settings') return renderSettings(view, r);
+  const later = {
+    today: ['Today', 'Follow-ups due, quotes waiting on a disclosure acknowledgment, and start-ups finishing this week will show here.'],
+    jobs: ['Jobs', 'Every start-up by stage, with its timeline and weekly-service outcome, will live here.'],
+    quotes: ['Quotes', 'The quote builder and PDF download come next. Set up your line items, builder pricing, and templates first so new quotes fill in automatically.'],
+  }[r.tab] || ['Not found', ''];
+  view.innerHTML = `<div class="view-head"><h2>${later[0]}</h2></div>
+    <div class="panel empty"><strong>Coming in the next update</strong><p>${later[1]}</p>
+    <button class="btn btn-primary" id="to-settings">Set up pricing and templates</button></div>`;
+  $('#to-settings').onclick = () => go('settings/templates');
+}
+
+// =====================================================================
+// SETTINGS
+// =====================================================================
+function renderSettings(view, r) {
+  const subs = [['items','Line items'],['builders','Builders & pricing'],['templates','Templates'],['followups','Follow-up schedule'],['general','Quote & disclosure']];
+  view.innerHTML = `<div class="settings">
+    <nav class="subnav">${subs.map(([k, t]) => `<a href="#/settings/${k}" class="${r.sub === k ? 'active' : ''}" data-sub="${k}">${t}</a>`).join('')}</nav>
+    <section id="sview"></section></div>`;
+  $$('[data-sub]').forEach(a => a.onclick = e => { e.preventDefault(); go('settings/' + a.dataset.sub); });
+  const sv = $('#sview');
+  ({ items: viewItems, builders: r.id ? viewBuilderEdit : viewBuilders, templates: r.id ? viewTemplateEdit : viewTemplates,
+     followups: viewCadence, general: viewGeneral }[r.sub] || viewItems)(sv, r);
+}
+
+// ---------- line items ----------
+function viewItems(sv) {
+  const list = S.items.filter(i => S.showArchived || i.active);
+  const archived = S.items.filter(i => !i.active).length;
+  sv.innerHTML = `<div class="view-head"><h2>Line items</h2><div class="grow"></div>
+      ${archived ? `<label class="check"><input type="checkbox" id="show-arch"${S.showArchived ? ' checked' : ''}> Show archived (${archived})</label>` : ''}
+      <button class="btn btn-primary" id="add">Add line item</button>
+      <div class="sub">The standard Poolie price list. Builders can override any price, and templates are built from these items.</div></div>
+    <div class="panel tbl-wrap">${list.length ? `<table class="tbl"><thead><tr><th>Item</th><th>Timeline</th><th>Team</th><th class="right">Price</th><th>Tax</th></tr></thead><tbody>
+      ${list.map(i => `<tr class="click${i.active ? '' : ' archived'}" data-id="${i.id}">
+        <td><div class="name">${h(i.name)}${i.is_note ? ' <span class="chip off">Note</span>' : ''}${i.active ? '' : ' <span class="chip off">Archived</span>'}</div>
+          ${i.description ? `<div class="clip">${h(i.description)}</div>` : ''}</td>
+        <td>${h(label(PHASES, i.phase))}</td><td>${h(label(TEAMS, i.team))}</td>
+        <td class="right num">${i.is_note ? '<span class="faint">—</span>' : money(i.default_price)}</td>
+        <td>${i.taxable && !i.is_note ? 'Yes' : '<span class="faint">No</span>'}</td></tr>`).join('')}
+      </tbody></table>` : `<div class="empty"><strong>No line items yet</strong><p>Add the services you quote, like site prep, weekly visits, and the final walkthrough.</p></div>`}</div>`;
+  $('#add').onclick = () => editItem(null);
+  $('#show-arch') && ($('#show-arch').onchange = e => { S.showArchived = e.target.checked; viewItems(sv); });
+  $$('tr[data-id]', sv).forEach(tr => tr.onclick = () => editItem(byId(S.items, tr.dataset.id)));
+}
+
+function editItem(it) {
+  const isNew = !it;
+  it = it || { name: '', description: '', default_price: 0, taxable: true, team: 'service', phase: 'none', is_note: false, active: true,
+               sort: (Math.max(0, ...S.items.map(i => i.sort || 0)) + 10) };
+  const usedIn = isNew ? [] : [...new Set(S.templateLines.filter(l => l.item_id === it.id).map(l => byId(S.templates, l.template_id)?.name).filter(Boolean))];
+  openDialog({
+    title: isNew ? 'Add line item' : 'Edit line item',
+    body: `<div class="field"><label class="lbl" for="i-name">Name</label><input id="i-name" type="text" value="${h(it.name)}" placeholder="e.g. Week 2 — 2 Visits"></div>
+      <div class="field"><label class="lbl" for="i-desc">Description (prints under the name on quotes)</label><textarea id="i-desc" rows="3">${h(it.description)}</textarea></div>
+      <div class="g3">
+        <div class="field"><label class="lbl" for="i-price">Standard price</label><input id="i-price" type="text" inputmode="decimal" value="${Number(it.default_price).toFixed(2)}"></div>
+        <div class="field"><label class="lbl" for="i-phase">Timeline</label><select id="i-phase">${opts(PHASES, it.phase)}</select></div>
+        <div class="field"><label class="lbl" for="i-team">Team</label><select id="i-team">${opts(TEAMS, it.team)}</select></div>
+      </div>
+      <div class="field" style="display:grid;gap:8px">
+        <label class="check"><input type="checkbox" id="i-tax"${it.taxable ? ' checked' : ''}> Charge sales tax</label>
+        <label class="check"><input type="checkbox" id="i-note"${it.is_note ? ' checked' : ''}> Note line — prints the text only, no price (for disclaimers)</label>
+      </div>
+      <div class="field"><label class="lbl" for="i-sort">Sort order</label><input id="i-sort" type="number" step="1" value="${it.sort ?? 0}" style="max-width:120px">
+        <div class="hint">Lower numbers appear first in lists and when adding to templates.</div></div>
+      ${usedIn.length ? `<div class="hint">Used in: ${usedIn.map(h).join(', ')}</div>` : ''}`,
+    foot: `${isNew ? '' : `<div class="left"><button class="btn btn-sm btn-ghost" id="i-arch">${it.active ? 'Archive' : 'Restore'}</button><button class="btn btn-sm btn-ghost btn-danger" id="i-del">Delete</button></div>`}
+      <button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="i-save">${isNew ? 'Add item' : 'Save changes'}</button>`,
+    onMount: d => {
+      d.querySelector('#i-save').onclick = async () => {
+        const price = numOrNull($('#i-price').value);
+        const row = { name: $('#i-name').value.trim(), description: $('#i-desc').value.trim() || null, default_price: price ?? 0,
+          phase: $('#i-phase').value, team: $('#i-team').value, taxable: $('#i-tax').checked, is_note: $('#i-note').checked,
+          sort: parseInt($('#i-sort').value, 10) || 0 };
+        if (!row.name) return toast('Give the item a name.', true);
+        if (Number.isNaN(price) || price < 0) return toast('Enter a valid price.', true);
+        try {
+          if (isNew) S.items.push((await q(sb.from('su_items').insert(row).select().single(), 'Adding item')));
+          else Object.assign(it, await q(sb.from('su_items').update(row).eq('id', it.id).select().single(), 'Saving item'));
+          S.items.sort((a, b) => (a.sort - b.sort) || a.name.localeCompare(b.name));
+          d.close(); toast(isNew ? 'Item added' : 'Item saved'); render();
+        } catch (_) {}
+      };
+      if (!isNew) {
+        d.querySelector('#i-arch').onclick = async () => {
+          try { Object.assign(it, await q(sb.from('su_items').update({ active: !it.active }).eq('id', it.id).select().single(), 'Updating item'));
+            d.close(); toast(it.active ? 'Item restored' : 'Item archived'); render(); } catch (_) {}
+        };
+        d.querySelector('#i-del').onclick = async () => {
+          const msg = usedIn.length
+            ? `“${h(it.name)}” is used in ${usedIn.length} template${usedIn.length > 1 ? 's' : ''} (${usedIn.map(h).join(', ')}). Deleting it removes it from those templates. Past quotes keep their copy. Archive it instead if you might need it again.`
+            : `Delete “${h(it.name)}”? Past quotes keep their copy of this line.`;
+          if (!(await confirmDialog('Delete line item', msg))) return;
+          try {
+            await q(sb.from('su_template_lines').delete().eq('item_id', it.id), 'Removing from templates');
+            await q(sb.from('su_items').delete().eq('id', it.id), 'Deleting item');
+            S.items = S.items.filter(x => x.id !== it.id);
+            S.templateLines = S.templateLines.filter(l => l.item_id !== it.id);
+            S.builderPrices = S.builderPrices.filter(p => p.item_id !== it.id);
+            toast('Item deleted'); render();
+          } catch (_) {}
+        };
+      }
+    }
+  });
+}
+
+// ---------- builders ----------
+function viewBuilders(sv) {
+  sv.innerHTML = `<div class="view-head"><h2>Builders & pricing</h2><div class="grow"></div><button class="btn btn-primary" id="add">Add builder</button>
+      <div class="sub">Each builder can have its own contract prices. Quotes for their jobs fill in with these automatically.</div></div>
+    <div class="panel tbl-wrap">${S.builders.length ? `<table class="tbl"><thead><tr><th>Builder</th><th>Contact</th><th>Contract prices</th><th>Templates</th></tr></thead><tbody>
+      ${S.builders.map(b => {
+        const n = S.builderPrices.filter(p => p.builder_id === b.id).length;
+        const t = S.templates.filter(x => x.builder_id === b.id).length;
+        return `<tr class="click${b.active ? '' : ' archived'}" data-id="${b.id}"><td class="name">${h(b.name)}</td>
+          <td>${h(b.contact_name || '')}${b.email ? `<div class="clip">${h(b.email)}</div>` : ''}</td>
+          <td>${n ? `${n} item${n > 1 ? 's' : ''}` : '<span class="faint">Standard pricing</span>'}</td><td>${t || '<span class="faint">—</span>'}</td></tr>`; }).join('')}
+      </tbody></table>` : `<div class="empty"><strong>No builders yet</strong><p>Add the pool builder you’re doing start-ups for, then enter their contract prices.</p></div>`}</div>`;
+  $('#add').onclick = () => go('settings/builders/new');
+  $$('tr[data-id]', sv).forEach(tr => tr.onclick = () => go('settings/builders/' + tr.dataset.id));
+}
+
+function viewBuilderEdit(sv, r) {
+  const isNew = r.id === 'new';
+  const src = isNew ? null : byId(S.builders, r.id);
+  if (!isNew && !src) { sv.innerHTML = `<div class="panel empty"><strong>Builder not found</strong><p><a href="#/settings/builders">Back to builders</a></p></div>`; return; }
+  if (!S.draft || S.draft.kind !== 'builder' || S.draft.id !== r.id) {
+    const prices = {};
+    if (src) S.builderPrices.filter(p => p.builder_id === src.id).forEach(p => prices[p.item_id] = { price: Number(p.price).toFixed(2), desc: p.description_override || '' });
+    S.draft = { kind: 'builder', id: r.id, b: src ? { ...src } : { name: '', contact_name: '', email: '', phone: '', notes: '', active: true }, prices };
+  }
+  const D = S.draft, b = D.b;
+  const items = S.items.filter(i => i.active && !i.is_note || D.prices[i.id]);
+  sv.innerHTML = `<div class="view-head"><button class="btn btn-sm btn-ghost" id="back">‹ Builders</button><h2>${isNew ? 'New builder' : h(b.name)}</h2></div>
+    <div class="panel panel-pad"><h3>Details</h3><p class="desc">Who to contact at the builder.</p>
+      <div class="g2">
+        <div class="field"><label class="lbl" for="b-name">Company name</label><input id="b-name" type="text" data-f="name" value="${h(b.name)}" placeholder="e.g. LH Custom Pools"></div>
+        <div class="field"><label class="lbl" for="b-contact">Contact name</label><input id="b-contact" type="text" data-f="contact_name" value="${h(b.contact_name)}"></div>
+        <div class="field"><label class="lbl" for="b-email">Email</label><input id="b-email" type="email" data-f="email" value="${h(b.email)}"></div>
+        <div class="field"><label class="lbl" for="b-phone">Phone</label><input id="b-phone" type="tel" data-f="phone" value="${h(b.phone)}"></div>
+      </div>
+      <div class="field"><label class="lbl" for="b-notes">Notes</label><textarea id="b-notes" data-f="notes" rows="2" placeholder="Contract terms, who pays, notice expectations…">${h(b.notes)}</textarea></div>
+      <label class="check"><input type="checkbox" id="b-active"${b.active ? ' checked' : ''}> Active</label>
+    </div>
+    <div class="panel"><div class="panel-pad" style="padding-bottom:6px"><h3>Contract prices</h3>
+      <p class="desc">Leave a price blank to use the standard price. Wording changes print on this builder’s quotes only.</p></div>
+      <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Item</th><th class="right">Standard</th><th class="right">Builder price</th><th></th></tr></thead><tbody>
+      ${items.map(i => { const p = D.prices[i.id] || { price: '', desc: '' };
+        return `<tr data-item="${i.id}"><td><div class="name">${h(i.name)}</div>
+            <div class="line-wording" ${p.desc ? '' : 'hidden'}><textarea rows="2" data-desc placeholder="${h(i.description || 'Description for this builder')}">${h(p.desc)}</textarea></div></td>
+          <td class="right num faint">${money(i.default_price)}</td>
+          <td class="right"><input type="text" inputmode="decimal" class="w-price right" data-price value="${h(p.price)}" placeholder="${Number(i.default_price).toFixed(2)}"></td>
+          <td><button class="icon-btn" data-wording title="Change wording for this builder" aria-label="Change wording">✎</button></td></tr>`; }).join('')}
+      </tbody></table></div></div>
+    <div class="savebar"><span class="dirty" id="dirty-flag"${S.dirty ? '' : ' hidden'}>Unsaved changes</span>
+      ${isNew ? '' : '<button class="btn btn-ghost btn-danger" id="b-del">Delete builder</button>'}
+      <button class="btn" id="b-cancel">Cancel</button><button class="btn btn-primary" id="b-save">${isNew ? 'Add builder' : 'Save changes'}</button></div>`;
+
+  $('#back').onclick = $('#b-cancel').onclick = () => go('settings/builders');
+  $$('[data-f]', sv).forEach(el => el.oninput = () => { b[el.dataset.f] = el.value; markDirty(); });
+  $('#b-active').onchange = e => { b.active = e.target.checked; markDirty(); };
+  $$('tr[data-item]', sv).forEach(tr => {
+    const id = tr.dataset.item;
+    const get = () => (D.prices[id] = D.prices[id] || { price: '', desc: '' });
+    $('[data-price]', tr).oninput = e => { get().price = e.target.value; markDirty(); };
+    $('[data-desc]', tr).oninput = e => { get().desc = e.target.value; markDirty(); };
+    $('[data-wording]', tr).onclick = () => { const w = $('.line-wording', tr); w.hidden = !w.hidden; if (!w.hidden) $('textarea', w).focus(); };
+  });
+  $('#b-save').onclick = async () => {
+    if (!b.name.trim()) return toast('Give the builder a name.', true);
+    const rows = [];
+    for (const [item_id, p] of Object.entries(D.prices)) {
+      const price = numOrNull(p.price);
+      if (Number.isNaN(price) || (price != null && price < 0)) return toast(`Check the price for ${byId(S.items, item_id)?.name || 'an item'}.`, true);
+      if (price != null || p.desc.trim()) rows.push({ item_id, price: price ?? Number(byId(S.items, item_id)?.default_price || 0), description_override: p.desc.trim() || null });
+    }
+    const row = { name: b.name.trim(), contact_name: b.contact_name?.trim() || null, email: b.email?.trim() || null, phone: b.phone?.trim() || null, notes: b.notes?.trim() || null, active: b.active };
+    try {
+      let saved;
+      if (isNew) { saved = await q(sb.from('su_builders').insert(row).select().single(), 'Adding builder'); S.builders.push(saved); }
+      else { saved = await q(sb.from('su_builders').update(row).eq('id', src.id).select().single(), 'Saving builder'); Object.assign(src, saved); }
+      await q(sb.from('su_builder_prices').delete().eq('builder_id', saved.id), 'Saving prices');
+      let inserted = [];
+      if (rows.length) inserted = await q(sb.from('su_builder_prices').insert(rows.map(x => ({ ...x, builder_id: saved.id }))).select(), 'Saving prices');
+      S.builderPrices = S.builderPrices.filter(p => p.builder_id !== saved.id).concat(inserted);
+      S.builders.sort((a, b2) => a.name.localeCompare(b2.name));
+      S.dirty = false; S.draft = null; toast(isNew ? 'Builder added' : 'Builder saved'); go('settings/builders');
+    } catch (_) {}
+  };
+  $('#b-del') && ($('#b-del').onclick = async () => {
+    const tpl = S.templates.filter(t => t.builder_id === src.id).length;
+    if (!(await confirmDialog('Delete builder', `Delete ${h(src.name)} and their contract prices?${tpl ? ` Their ${tpl} template${tpl > 1 ? 's' : ''} will become available to all builders.` : ''} Jobs linked to this builder stay, without a builder.`))) return;
+    try {
+      await q(sb.from('su_builders').delete().eq('id', src.id), 'Deleting builder');
+      S.builders = S.builders.filter(x => x.id !== src.id);
+      S.builderPrices = S.builderPrices.filter(p => p.builder_id !== src.id);
+      S.templates.forEach(t => { if (t.builder_id === src.id) t.builder_id = null; });
+      S.dirty = false; toast('Builder deleted'); go('settings/builders');
+    } catch (_) {}
+  });
+}
+
+// ---------- templates ----------
+function viewTemplates(sv) {
+  sv.innerHTML = `<div class="view-head"><h2>Templates</h2><div class="grow"></div><button class="btn btn-primary" id="add">New template</button>
+      <div class="sub">Saved sets of line items. Pick one when starting a quote, then add or remove lines as needed.</div></div>
+    <div class="panel tbl-wrap">${S.templates.length ? `<table class="tbl"><thead><tr><th>Template</th><th>For</th><th>Starts at</th><th class="right">Lines</th><th class="right">Subtotal</th></tr></thead><tbody>
+      ${S.templates.map(t => { const lines = S.templateLines.filter(l => l.template_id === t.id); const tot = templateTotals(lines, t.builder_id);
+        return `<tr class="click${t.active ? '' : ' archived'}" data-id="${t.id}"><td><div class="name">${h(t.name)}</div>${t.description ? `<div class="clip">${h(t.description)}</div>` : ''}</td>
+          <td>${t.builder_id ? h(byId(S.builders, t.builder_id)?.name || '—') : '<span class="faint">All builders</span>'}</td>
+          <td>${h(label(JOIN_PHASES, t.join_phase))}</td><td class="right num">${lines.length}</td><td class="right num">${money(tot.sub)}</td></tr>`; }).join('')}
+      </tbody></table>` : `<div class="empty"><strong>No templates yet</strong><p>Create a template for each package you quote often, like the full start-up or chemical-only.</p></div>`}</div>`;
+  $('#add').onclick = () => go('settings/templates/new');
+  $$('tr[data-id]', sv).forEach(tr => tr.onclick = () => go('settings/templates/' + tr.dataset.id));
+}
+
+function viewTemplateEdit(sv, r) {
+  const isNew = r.id === 'new';
+  const src = isNew ? null : byId(S.templates, r.id);
+  if (!isNew && !src) { sv.innerHTML = `<div class="panel empty"><strong>Template not found</strong><p><a href="#/settings/templates">Back to templates</a></p></div>`; return; }
+  if (!S.draft || S.draft.kind !== 'template' || S.draft.id !== r.id) {
+    S.draft = { kind: 'template', id: r.id,
+      t: src ? { ...src } : { name: '', description: '', builder_id: null, join_phase: 'prep', active: true, sort: (Math.max(0, ...S.templates.map(x => x.sort || 0)) + 10) },
+      lines: src ? S.templateLines.filter(l => l.template_id === src.id).sort((a, b) => a.sort - b.sort)
+        .map(l => ({ item_id: l.item_id, qty: Number(l.qty), unit_price: l.unit_price == null ? null : Number(l.unit_price), name: l.name || '', description: l.description || '', open: !!(l.name || l.description) })) : [] };
+  }
+  const D = S.draft, t = D.t;
+  const builderOpts = [['', 'All builders'], ...S.builders.filter(b => b.active || b.id === t.builder_id).map(b => [b.id, b.name])];
+  const addable = S.items.filter(i => i.active);
+
+  const draw = () => {
+    const tot = templateTotals(D.lines, t.builder_id);
+    $('#lines').innerHTML = D.lines.length ? D.lines.map((l, idx) => {
+      const c = lineCalc(l, t.builder_id);
+      const nm = l.name || c.it?.name || '(deleted item)';
+      return `<tr data-i="${idx}"><td class="drag"><button class="icon-btn" data-up ${idx === 0 ? 'disabled' : ''} aria-label="Move up">↑</button><button class="icon-btn" data-down ${idx === D.lines.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button></td>
+        <td><div class="name">${h(nm)}${c.isNote ? ' <span class="chip off">Note</span>' : ''} <span class="chip off">${h(label(PHASES, c.it?.phase || 'none'))}</span></div>
+          <div class="line-wording" ${l.open ? '' : 'hidden'}>
+            <input type="text" data-name placeholder="${h(c.it?.name || 'Name')}" value="${h(l.name)}">
+            <textarea rows="2" data-descr placeholder="${h(builderPrice(t.builder_id, l.item_id)?.description_override || c.it?.description || 'Description')}">${h(l.description)}</textarea>
+            <div class="hint">Leave blank to use the item’s standard wording.</div></div></td>
+        <td class="w-qty">${c.isNote ? '' : `<input type="number" min="0" step="1" data-qty value="${l.qty}" aria-label="Quantity">`}</td>
+        <td class="w-price">${c.isNote ? '<span class="faint">—</span>' : `<input type="text" inputmode="decimal" class="right${c.overridden ? ' override' : ''}" data-price value="${l.unit_price == null ? '' : l.unit_price.toFixed(2)}" placeholder="${c.list.toFixed(2)}" aria-label="Unit price">`}</td>
+        <td class="right num">${c.isNote ? '' : money(c.total)}</td>
+        <td style="white-space:nowrap"><button class="icon-btn" data-wording title="Change wording" aria-label="Change wording">✎</button><button class="icon-btn" data-rm title="Remove line" aria-label="Remove line">✕</button></td></tr>`;
+    }).join('') : `<tr><td colspan="6"><div class="empty" style="padding:20px"><strong>No lines yet</strong><p style="margin:0">Add items from the list below.</p></div></td></tr>`;
+    $('#totals').innerHTML = `<span class="muted">Subtotal</span><span class="right num">${money(tot.sub)}</span>
+      <span class="muted">Tax (${(tot.rate * 100).toFixed(2).replace(/\.?0+$/, '')}%)</span><span class="right num">${money(tot.tax)}</span>
+      <span class="t">Total</span><span class="right num t">${money(tot.total)}</span>`;
+    $$('#lines tr[data-i]').forEach(tr => {
+      const i = +tr.dataset.i, l = D.lines[i];
+      const mv = d => { const j = i + d; [D.lines[i], D.lines[j]] = [D.lines[j], D.lines[i]]; markDirty(); draw(); };
+      $('[data-up]', tr).onclick = () => mv(-1);
+      $('[data-down]', tr).onclick = () => mv(1);
+      $('[data-rm]', tr).onclick = () => { D.lines.splice(i, 1); markDirty(); draw(); };
+      $('[data-wording]', tr).onclick = () => { l.open = !l.open; draw(); if (l.open) $(`#lines tr[data-i="${i}"] [data-name]`).focus(); };
+      const qty = $('[data-qty]', tr); qty && (qty.onchange = () => { l.qty = Math.max(0, Number(qty.value) || 0); markDirty(); draw(); });
+      const pr = $('[data-price]', tr); pr && (pr.onchange = () => {
+        const v = numOrNull(pr.value);
+        if (Number.isNaN(v) || (v != null && v < 0)) { toast('Enter a valid price, or leave it blank for the standard price.', true); pr.value = l.unit_price == null ? '' : l.unit_price.toFixed(2); return; }
+        l.unit_price = v; markDirty(); draw(); });
+      $('[data-name]', tr).oninput = e => { l.name = e.target.value; markDirty(); };
+      $('[data-descr]', tr).oninput = e => { l.description = e.target.value; markDirty(); };
+    });
+  };
+
+  sv.innerHTML = `<div class="view-head"><button class="btn btn-sm btn-ghost" id="back">‹ Templates</button><h2>${isNew ? 'New template' : h(t.name)}</h2></div>
+    <div class="panel panel-pad">
+      <div class="g2">
+        <div class="field"><label class="lbl" for="t-name">Template name</label><input id="t-name" type="text" value="${h(t.name)}" placeholder="e.g. Complete Start-Up Package"></div>
+        <div class="field"><label class="lbl" for="t-desc">Short description</label><input id="t-desc" type="text" value="${h(t.description)}" placeholder="When to use it"></div>
+        <div class="field"><label class="lbl" for="t-builder">Available for</label><select id="t-builder">${opts(builderOpts, t.builder_id || '')}</select>
+          <div class="hint">Prices below use this builder’s contract pricing.</div></div>
+        <div class="field"><label class="lbl" for="t-join">Start-up begins at</label><select id="t-join">${opts(JOIN_PHASES, t.join_phase)}</select>
+          <div class="hint">Use a later week for takeovers of start-ups already in progress.</div></div>
+      </div>
+      <label class="check"><input type="checkbox" id="t-active"${t.active ? ' checked' : ''}> Show this template when creating quotes</label>
+    </div>
+    <div class="panel"><div class="tbl-wrap"><table class="tbl editor-lines"><thead><tr><th></th><th>Line</th><th>Qty</th><th class="right">Unit price</th><th class="right">Total</th><th></th></tr></thead>
+      <tbody id="lines"></tbody></table></div>
+      <div class="panel-pad row" style="border-top:1px solid var(--border)">
+        <select id="add-item" class="grow" style="max-width:420px"><option value="">Add a line item…</option>${addable.map(i => `<option value="${i.id}">${h(i.name)}${i.is_note ? ' (note)' : ` — ${money(resolvedPrice(i.id, t.builder_id))}`}</option>`).join('')}</select>
+        <span class="hint" style="margin:0">Blank prices use ${t.builder_id ? 'the builder’s contract price' : 'the standard price'}. Changed prices show in amber.</span>
+      </div>
+      <div class="totals" id="totals"></div></div>
+    <div class="savebar"><span class="dirty" id="dirty-flag"${S.dirty ? '' : ' hidden'}>Unsaved changes</span>
+      ${isNew ? '' : '<button class="btn btn-ghost btn-danger" id="t-del">Delete</button><button class="btn" id="t-dup">Duplicate</button>'}
+      <button class="btn" id="t-cancel">Cancel</button><button class="btn btn-primary" id="t-save">${isNew ? 'Save template' : 'Save changes'}</button></div>`;
+
+  draw();
+  $('#back').onclick = $('#t-cancel').onclick = () => go('settings/templates');
+  $('#t-name').oninput = e => { t.name = e.target.value; markDirty(); };
+  $('#t-desc').oninput = e => { t.description = e.target.value; markDirty(); };
+  $('#t-builder').onchange = e => { t.builder_id = e.target.value || null; markDirty(); viewTemplateEdit(sv, r); };
+  $('#t-join').onchange = e => { t.join_phase = e.target.value; markDirty(); };
+  $('#t-active').onchange = e => { t.active = e.target.checked; markDirty(); };
+  $('#add-item').onchange = e => { if (!e.target.value) return; D.lines.push({ item_id: e.target.value, qty: 1, unit_price: null, name: '', description: '', open: false }); e.target.value = ''; markDirty(); draw(); };
+
+  const saveTemplate = async (asCopy) => {
+    const name = (asCopy ? `${t.name} (copy)` : t.name).trim();
+    if (!name) return toast('Give the template a name.', true);
+    const row = { name, description: t.description?.trim() || null, builder_id: t.builder_id || null, join_phase: t.join_phase, active: t.active, sort: t.sort ?? 0 };
+    try {
+      let saved;
+      if (isNew || asCopy) { saved = await q(sb.from('su_templates').insert(row).select().single(), 'Saving template'); S.templates.push(saved); }
+      else { saved = await q(sb.from('su_templates').update(row).eq('id', src.id).select().single(), 'Saving template'); Object.assign(src, saved);
+        await q(sb.from('su_template_lines').delete().eq('template_id', src.id), 'Saving lines'); }
+      const lineRows = D.lines.filter(l => l.item_id).map((l, i) => ({ template_id: saved.id, item_id: l.item_id, qty: l.qty, unit_price: l.unit_price,
+        name: l.name.trim() || null, description: l.description.trim() || null, sort: (i + 1) * 10 }));
+      let ins = [];
+      if (lineRows.length) ins = await q(sb.from('su_template_lines').insert(lineRows).select(), 'Saving lines');
+      S.templateLines = S.templateLines.filter(l => l.template_id !== saved.id).concat(ins);
+      S.templates.sort((a, b) => (a.sort - b.sort) || a.name.localeCompare(b.name));
+      S.dirty = false; S.draft = null;
+      toast(asCopy ? 'Template duplicated' : 'Template saved');
+      go(asCopy ? 'settings/templates/' + saved.id : 'settings/templates');
+    } catch (_) {}
+  };
+  $('#t-save').onclick = () => saveTemplate(false);
+  $('#t-dup') && ($('#t-dup').onclick = () => {
+    if (S.dirty) return toast('Save your changes before duplicating.', true);
+    saveTemplate(true);
+  });
+  $('#t-del') && ($('#t-del').onclick = async () => {
+    if (!(await confirmDialog('Delete template', `Delete “${h(src.name)}”? Quotes already made from it aren’t affected.`))) return;
+    try {
+      await q(sb.from('su_templates').delete().eq('id', src.id), 'Deleting template');
+      S.templates = S.templates.filter(x => x.id !== src.id);
+      S.templateLines = S.templateLines.filter(l => l.template_id !== src.id);
+      S.dirty = false; toast('Template deleted'); go('settings/templates');
+    } catch (_) {}
+  });
+}
+
+// ---------- follow-up schedule ----------
+const whenText = d => d === 0 ? 'Day of final visit' : d < 0 ? `${-d} day${d === -1 ? '' : 's'} before final` : `${d} day${d === 1 ? '' : 's'} after final`;
+function viewCadence(sv) {
+  sv.innerHTML = `<div class="view-head"><h2>Follow-up schedule</h2><div class="grow"></div><button class="btn btn-primary" id="add">Add follow-up</button>
+      <div class="sub">These tasks are created for every job once its final visit date is set. Reps choose call, text, or email when they log each one.</div></div>
+    <div class="panel tbl-wrap">${S.cadence.length ? `<table class="tbl"><thead><tr><th>When</th><th>Name</th><th>Suggested script</th><th></th></tr></thead><tbody>
+      ${S.cadence.map(c => `<tr class="click${c.active ? '' : ' archived'}" data-id="${c.id}"><td style="white-space:nowrap">${whenText(c.offset_days)}</td>
+        <td class="name">${h(c.label)}</td><td><div class="clip" style="max-width:380px">${h(c.script || '—')}</div></td>
+        <td>${c.active ? '' : '<span class="chip off">Off</span>'}</td></tr>`).join('')}
+      </tbody></table>` : `<div class="empty"><strong>No follow-ups scheduled</strong><p>Add the touches you want before and after each final visit.</p></div>`}</div>`;
+  $('#add').onclick = () => editStep(null);
+  $$('tr[data-id]', sv).forEach(tr => tr.onclick = () => editStep(byId(S.cadence, tr.dataset.id)));
+}
+function editStep(c) {
+  const isNew = !c;
+  c = c || { label: '', offset_days: 0, script: '', active: true, sort: 0 };
+  const when = c.offset_days === 0 ? 'on' : c.offset_days < 0 ? 'before' : 'after';
+  openDialog({
+    title: isNew ? 'Add follow-up' : 'Edit follow-up',
+    body: `<div class="field"><label class="lbl" for="c-label">Name</label><input id="c-label" type="text" value="${h(c.label)}" placeholder="e.g. 3 days before final"></div>
+      <div class="field"><label class="lbl">When</label><div class="row">
+        <input id="c-days" type="number" min="0" step="1" value="${Math.abs(c.offset_days)}" style="width:90px"${when === 'on' ? ' disabled' : ''}>
+        <select id="c-when" style="width:auto">${opts([['before','days before final visit'],['on','on the day of final visit'],['after','days after final visit']], when)}</select></div></div>
+      <div class="field"><label class="lbl" for="c-script">Suggested script</label><textarea id="c-script" rows="9">${h(c.script)}</textarea>
+        <div class="hint">Click to insert: ${PLACEHOLDERS.map(p => `<button type="button" class="ph" data-ph="${p}">${p}</button>`).join(' ')}</div></div>
+      <label class="check"><input type="checkbox" id="c-active"${c.active ? ' checked' : ''}> Create this follow-up for new jobs</label>`,
+    foot: `${isNew ? '' : '<div class="left"><button class="btn btn-sm btn-ghost btn-danger" id="c-del">Delete</button></div>'}
+      <button class="btn" data-close>Cancel</button><button class="btn btn-primary" id="c-save">${isNew ? 'Add follow-up' : 'Save changes'}</button>`,
+    onMount: d => {
+      const ta = $('#c-script');
+      $('#c-when').onchange = e => { $('#c-days').disabled = e.target.value === 'on'; };
+      $$('[data-ph]', d).forEach(b => b.onclick = () => {
+        const s = ta.selectionStart ?? ta.value.length, e = ta.selectionEnd ?? s;
+        ta.value = ta.value.slice(0, s) + b.dataset.ph + ta.value.slice(e); ta.focus(); ta.selectionStart = ta.selectionEnd = s + b.dataset.ph.length;
+      });
+      $('#c-save').onclick = async () => {
+        const w = $('#c-when').value, n = Math.abs(parseInt($('#c-days').value, 10) || 0);
+        const offset = w === 'on' ? 0 : w === 'before' ? -n : n;
+        const row = { label: $('#c-label').value.trim() || whenText(offset), offset_days: offset, script: ta.value.trim() || null, active: $('#c-active').checked, sort: offset };
+        try {
+          if (isNew) S.cadence.push(await q(sb.from('su_cadence_steps').insert(row).select().single(), 'Adding follow-up'));
+          else Object.assign(c, await q(sb.from('su_cadence_steps').update(row).eq('id', c.id).select().single(), 'Saving follow-up'));
+          S.cadence.sort((a, b) => a.offset_days - b.offset_days);
+          d.close(); toast(isNew ? 'Follow-up added' : 'Follow-up saved'); render();
+        } catch (_) {}
+      };
+      !isNew && ($('#c-del').onclick = async () => {
+        if (!(await confirmDialog('Delete follow-up', `Delete “${h(c.label)}”? Follow-ups already created for existing jobs stay on their lists.`))) return;
+        try { await q(sb.from('su_cadence_steps').delete().eq('id', c.id), 'Deleting follow-up');
+          S.cadence = S.cadence.filter(x => x.id !== c.id); toast('Follow-up deleted'); render(); } catch (_) {}
+      });
+    }
+  });
+}
+
+// ---------- quote & disclosure ----------
+function viewGeneral(sv) {
+  const st = S.settings;
+  const co = st.company || {};
+  const po = st.phase_offsets || { prep: 0, week1: 1, week2: 7, week3: 14, week4: 21, final: 28 };
+  const checklist = Array.isArray(st.inspection_checklist) ? st.inspection_checklist.join('\n') : '';
+  sv.innerHTML = `<div class="view-head"><h2>Quote & disclosure</h2>
+      <div class="sub">Company details, tax, and the disclosure that prints on every quote. Changes apply to new quotes; sent quotes keep what they were sent with.</div></div>
+    <div class="panel panel-pad"><h3>Pricing</h3><p class="desc">Applied to every new quote.</p>
+      <div class="g3">
+        <div class="field"><label class="lbl" for="g-tax">Sales tax rate (%)</label><input id="g-tax" type="text" inputmode="decimal" value="${(Number(st.tax_rate ?? 0.0825) * 100).toFixed(3).replace(/\.?0+$/, '')}"></div>
+        <div class="field"><label class="lbl" for="g-exp">Quotes valid for (days)</label><input id="g-exp" type="number" min="1" step="1" value="${Number(st.quote_expiry_days ?? 30)}"></div>
+      </div></div>
+    <div class="panel panel-pad"><h3>Company details</h3><p class="desc">Printed on the quote header and footer.</p>
+      <div class="g2">
+        <div class="field"><label class="lbl" for="g-cname">Company name</label><input id="g-cname" type="text" value="${h(co.name)}"></div>
+        <div class="field"><label class="lbl" for="g-tag">Tagline</label><input id="g-tag" type="text" value="${h(co.tagline)}"></div>
+        <div class="field"><label class="lbl" for="g-addr">Street address</label><input id="g-addr" type="text" value="${h(co.address)}"></div>
+        <div class="g3" style="gap:0 10px">
+          <div class="field"><label class="lbl" for="g-city">City</label><input id="g-city" type="text" value="${h(co.city)}"></div>
+          <div class="field"><label class="lbl" for="g-state">State</label><input id="g-state" type="text" value="${h(co.state)}"></div>
+          <div class="field"><label class="lbl" for="g-zip">ZIP</label><input id="g-zip" type="text" value="${h(co.zip)}"></div></div>
+        <div class="field"><label class="lbl" for="g-phone">Main phone</label><input id="g-phone" type="tel" value="${h(co.phone)}"></div>
+        <div class="field"><label class="lbl" for="g-email">Main email</label><input id="g-email" type="email" value="${h(co.email)}"></div>
+      </div></div>
+    <div class="panel panel-pad"><h3>Plaster start-up disclosure</h3><p class="desc">Prints on every quote. Keep the acknowledgment statement word-for-word the same as the one inside the disclosure.</p>
+      <div class="field"><label class="lbl" for="g-ack">Acknowledgment statement the customer replies with</label><input id="g-ack" type="text" value="${h(st.ack_statement)}"></div>
+      <div class="field"><label class="lbl" for="g-disc">Disclosure text</label><textarea id="g-disc" rows="18" style="font-size:12.5px;line-height:1.5">${h(st.disclosure_text)}</textarea>
+        <div class="hint">Lines in ALL CAPS print as headings. Lines starting with “- ” print as bullets.</div></div></div>
+    <div class="panel panel-pad"><h3>Pre-start inspection checklist</h3><p class="desc">What the repair tech checks before start-up. One question per line.</p>
+      <textarea id="g-check" rows="7">${h(checklist)}</textarea></div>
+    <div class="panel panel-pad"><h3>Timeline</h3><p class="desc">Which day after the start date each phase begins. Used to estimate the final visit date and schedule follow-ups.</p>
+      <div class="g3">${JOIN_PHASES.map(([k, t]) => `<div class="field"><label class="lbl" for="po-${k}">${t} (day)</label><input id="po-${k}" type="number" min="0" step="1" data-po="${k}" value="${Number(po[k] ?? 0)}"></div>`).join('')}</div></div>
+    <div class="savebar"><span class="dirty" id="dirty-flag"${S.dirty ? '' : ' hidden'}>Unsaved changes</span><button class="btn btn-primary" id="g-save">Save changes</button></div>`;
+  $$('input, textarea', sv).forEach(el => el.addEventListener('input', markDirty));
+  $('#g-save').onclick = async () => {
+    const tax = numOrNull($('#g-tax').value);
+    if (tax == null || Number.isNaN(tax) || tax < 0 || tax > 20) return toast('Enter a tax rate between 0 and 20%.', true);
+    const exp = parseInt($('#g-exp').value, 10);
+    if (!(exp > 0)) return toast('Enter how many days quotes are valid.', true);
+    const offsets = {}; $$('[data-po]', sv).forEach(el => offsets[el.dataset.po] = Math.max(0, parseInt(el.value, 10) || 0));
+    const vals = {
+      tax_rate: Math.round(tax * 1000) / 100000,
+      quote_expiry_days: exp,
+      company: { name: $('#g-cname').value.trim(), tagline: $('#g-tag').value.trim(), address: $('#g-addr').value.trim(), city: $('#g-city').value.trim(),
+                 state: $('#g-state').value.trim(), zip: $('#g-zip').value.trim(), phone: $('#g-phone').value.trim(), email: $('#g-email').value.trim() },
+      ack_statement: $('#g-ack').value.trim(),
+      disclosure_text: $('#g-disc').value.replace(/\s+$/, ''),
+      inspection_checklist: $('#g-check').value.split('\n').map(s => s.trim()).filter(Boolean),
+      phase_offsets: offsets,
+    };
+    try {
+      await q(sb.from('su_settings').upsert(Object.entries(vals).map(([key, value]) => ({ key, value, updated_at: new Date().toISOString() }))), 'Saving settings');
+      Object.assign(S.settings, vals); S.dirty = false; toast('Settings saved'); render();
+    } catch (_) {}
+  };
+}
+
+// =====================================================================
+// BOOT
+// =====================================================================
+(async function boot() {
+  if (!sb) {
+    $('#root').innerHTML = `<div class="auth"><div class="auth-card">${brandHTML(false)}<div class="panel panel-pad"><h2>Setup needed</h2>
+      <p>config.js is missing or incomplete. Add your Supabase URL and publishable key to config.js in the repo, then redeploy.</p></div></div></div>`;
+    return;
+  }
+  const hashErr = new URLSearchParams(INITIAL_HASH.replace(/^#/, '')).get('error_description');
+  let isInvite = /type=(invite|recovery|signup)/.test(INITIAL_HASH);
+  window.__clearInvite = () => { isInvite = false; };
+  let started = false;
+
+  sb.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') { S.user = session.user; renderAuth('setpw', 'Choose a new password for your account.'); return; }
+    if (event === 'SIGNED_OUT') { isInvite = false; S.user = null; S.loaded = false; started = false; renderAuth('login'); return; }
+    if (session && !started && !isInvite) { S.user = session.user; started = true; startApp(); }
+    if (session) S.user = session.user;
+  });
+
+  const { data: { session } } = await sb.auth.getSession();
+  if (hashErr && !session) { renderAuth('login', hashErr.replace(/\+/g, ' ') + '. Ask for a new invite or reset your password.'); return; }
+  if (session && isInvite) { S.user = session.user; renderAuth('setpw', /recovery/.test(INITIAL_HASH) ? 'Choose a new password for your account.' : 'Welcome! Choose a password to finish setting up your account.'); return; }
+  if (!session) { renderAuth('login'); return; }
+  if (!started) { S.user = session.user; started = true; startApp(); }
+})();
+</script>
+</body>
+</html>
